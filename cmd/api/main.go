@@ -57,9 +57,10 @@ func main() {
 		logger: logger,
 	}
 
-	err = app.server()
-
-	panic(err)
+	err = app.serve()
+	if err != nil {
+		app.logger.Printf("Error serving app: %s", err.Error())
+	}
 
 }
 
