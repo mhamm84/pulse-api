@@ -40,3 +40,8 @@ func (app *application) badRequestHandler(w http.ResponseWriter, r *http.Request
 	message := "Bad Request was sent to the server"
 	app.errorResponse(w, r, http.StatusBadRequest, message)
 }
+
+func (app *application) rateLimitExceededResponse(w http.ResponseWriter, r *http.Request) {
+	message := "Too many requests were made"
+	app.errorResponse(w, r, http.StatusTooManyRequests, message)
+}

@@ -69,7 +69,7 @@ func (s CpiAlphaService) StartCpiDataSyncTask() {
 		// If there is data, check to see if the API has new data
 		if len(*cpiData) > 0 {
 			// Get transformed API data
-			s.Logger.PrintInfo("existing CPI data in MongoDB, checking API for updates", map[string]interface{}{
+			s.Logger.PrintInfo("existing CPI data in DB, checking API for updates", map[string]interface{}{
 				"task": "StartCpiDataSyncTask",
 			})
 			cpiApiData, err := s.getDataFromApi()

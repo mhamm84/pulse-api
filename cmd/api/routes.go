@@ -15,7 +15,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, pathWithVersion("/%s/healthcheck"), app.healthcheckHandler)
 	router.HandlerFunc(http.MethodGet, pathWithVersion("/%s/economic/dashboard"), app.economicDashHandler)
 
-	return app.recoverPanic(router)
+	return app.recoverPanic(app.rateLimit(router))
 }
 
 func pathWithVersion(pathFmt string) string {
