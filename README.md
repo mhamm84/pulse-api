@@ -22,3 +22,5 @@ ALPHA_VANTAGE_API_TOKEN=YOUR_TOKEN
 - CREATE DATABASE name
 - CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 
+## CORS
+go run ./cmd/api/ -cors-trusted-origins="http://localhost:9090"
