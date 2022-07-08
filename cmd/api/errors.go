@@ -19,9 +19,11 @@ func (app *application) errorResponse(w http.ResponseWriter, r *http.Request, st
 	}
 }
 
-func (app *application) serverErrorHandler(w http.ResponseWriter, r *http.Request) {
-	msg := "The server could not process the request"
-	app.errorResponse(w, r, http.StatusInternalServerError, msg)
+func (app *application) serverErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
+	app.logError(r, err)
+
+	message := "the server encountered a problem and could not process your request"
+	app.errorResponse(w, r, http.StatusInternalServerError, message)
 }
 
 func (app *application) notFoundHandler(w http.ResponseWriter, r *http.Request) {

@@ -34,7 +34,8 @@ type config struct {
 		maxIdleTime  string
 	}
 	alphaVantage struct {
-		token string
+		baseUrl string
+		token   string
 	}
 }
 
@@ -57,7 +58,8 @@ func main() {
 	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
 	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
 
-	flag.StringVar(&cfg.alphaVantage.token, "alpha-vantage-api-token", os.Getenv("ALPHA_VANTAGE_API_TOKEN"), "https://www.alphavantage.co/")
+	flag.StringVar(&cfg.alphaVantage.baseUrl, "alpha-vantage-base-url", os.Getenv("ALPHA_VANTAGE_BASE_URL"), "Base Url for Alpha Vantage API - https://www.alphavantage.co/")
+	flag.StringVar(&cfg.alphaVantage.token, "alpha-vantage-api-token", os.Getenv("ALPHA_VANTAGE_API_TOKEN"), "Auth Token for Alpha Vantage API - https://www.alphavantage.co/")
 
 	flag.Parse()
 
@@ -70,7 +72,7 @@ func main() {
 	}
 
 	// Create Alpha Client
-	alphaClient := alpha.NewClient(cfg.alphaVantage.token)
+	alphaClient := alpha.NewClient(cfg.alphaVantage.baseUrl, cfg.alphaVantage.token)
 
 	app := application{
 		cfg:      cfg,
@@ -84,11 +86,10 @@ func main() {
 	if err != nil {
 		app.logger.PrintFatal(err, nil)
 	}
-
 }
 
 /*
- * Connect to MongoDB
+ * Connect to DB
  */
 func openDB(cfg config, logger jsonlog.Logger) (*sqlx.DB, error) {
 	logger.PrintInfo("connecting and pinging postgres", nil)
