@@ -1,5 +1,6 @@
 package main
 
 func (app *application) startDataSyncs() {
-	app.services.cpiService.StartCpiDataSyncTask()
+	app.services.cpiService.StartDataSyncTask()
+	app.services.consumerSentimentService.StartDataSyncTask()
 }

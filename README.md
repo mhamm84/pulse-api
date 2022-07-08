@@ -22,5 +22,13 @@ ALPHA_VANTAGE_API_TOKEN=YOUR_TOKEN
 - CREATE DATABASE name
 - CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
 
+### Go DB Migrations
+#### Create
+- migrate create -seq -ext=.sql -dir=./migrations name-of-file
+#### Up
+- migrate -path=./migrations -database=$$EXAMPLE_DSN up
+#### Down
+- migrate -path=./migrations -database=$EXAMPLE_DSN down
+
 ## CORS
 go run ./cmd/api/ -cors-trusted-origins="http://localhost:9090"

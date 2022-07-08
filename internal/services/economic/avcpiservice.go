@@ -5,25 +5,22 @@ import (
 	"github.com/mhamm84/gofinance-alpha/alpha"
 	data2 "github.com/mhamm84/gofinance-alpha/alpha/data"
 	"github.com/mhamm84/pulse-api/internal/data"
+	"github.com/mhamm84/pulse-api/internal/data/economic"
 	"github.com/mhamm84/pulse-api/internal/jsonlog"
 	"github.com/mhamm84/pulse-api/internal/utils"
 	"github.com/shopspring/decimal"
 	"time"
 )
 
-const (
-	cpiServiceTimeout = 10
-)
-
-type CpiAlphaService struct {
+type AlphaVantageCpiService struct {
 	Models data.Models
-	Client *alpha.AlphaClient
+	Client *alpha.Client
 	Logger *jsonlog.Logger
 }
 
 // CpiGetAll Gets all the CPI data
 // if no data is found, a request is sent to the API to get the data to populate the DB
-func (s CpiAlphaService) CpiGetAll(ctx context.Context) (*[]data.Cpi, error) {
+func (s AlphaVantageCpiService) CpiGetAll(ctx context.Context) (*[]economic.Cpi, error) {
 	cpiPulseData, err := s.Models.CpiModel.GetAll(ctx)
 	if err != nil {
 		return nil, err
@@ -31,15 +28,16 @@ func (s CpiAlphaService) CpiGetAll(ctx context.Context) (*[]data.Cpi, error) {
 	return cpiPulseData, nil
 }
 
-func (s CpiAlphaService) StartCpiDataSyncTask() {
+func (s AlphaVantageCpiService) StartDataSyncTask() {
 	tr := utils.NewScheduleTaskRunner(5*time.Second, 24*time.Hour, s.Logger)
 	tr.Start(func() {
-		s.Logger.PrintInfo("AlphaCpi | CpiGetAll | DataSyncTask", map[string]interface{}{
-			"service":  "CpiAlphaService",
-			"function": "CpiGetAll",
+		s.Logger.PrintInfo("AlphaVantageCpiService | StartDataSyncTask", map[string]interface{}{
+			"service": "AlphaVantageCpiService",
 		})
-		ctx, cancel := context.WithTimeout(context.Background(), cpiServiceTimeout*time.Second)
+
+		ctx, cancel := context.WithTimeout(context.Background(), serviceTimeout*time.Second)
 		defer cancel()
+
 		cpiData, err := s.CpiGetAll(ctx)
 		if err != nil {
 			s.Logger.PrintError(err, nil)
@@ -77,14 +75,14 @@ func (s CpiAlphaService) StartCpiDataSyncTask() {
 				s.Logger.PrintError(err, nil)
 				return
 			}
-			s.insertNewData(cpiApiData, cpiData, func(data *data.Cpi) error {
+			s.insertNewData(cpiApiData, cpiData, func(data *economic.Cpi) error {
 				return s.Models.CpiModel.Insert(ctx, data)
 			})
 		}
 	})
 }
 
-func (s CpiAlphaService) insertNewData(apiData *[]data.Cpi, mongoData *[]data.Cpi, insert func(data *data.Cpi) error) error {
+func (s AlphaVantageCpiService) insertNewData(apiData *[]economic.Cpi, mongoData *[]economic.Cpi, insert func(data *economic.Cpi) error) error {
 	if len(*apiData) > len(*mongoData) {
 		delta := len(*apiData) - len(*mongoData)
 		i := 1
@@ -97,7 +95,6 @@ func (s CpiAlphaService) insertNewData(apiData *[]data.Cpi, mongoData *[]data.Cp
 				"cpi_date":  newData.Date,
 				"cpi_value": newData.Value,
 			})
-			//s.Models.CpiModel.InsertOne(&newData)
 			err := insert(&newData)
 			if err != nil {
 				return err
@@ -112,21 +109,21 @@ func (s CpiAlphaService) insertNewData(apiData *[]data.Cpi, mongoData *[]data.Cp
 	}
 }
 
-func (s CpiAlphaService) getDataFromApi() (*[]data.Cpi, error) {
+func (s AlphaVantageCpiService) getDataFromApi() (*[]economic.Cpi, error) {
 	//API
 	apiRes, err := s.Client.Cpi(nil)
 	if err != nil {
 		s.Logger.PrintError(err, nil)
 	}
 	// Transform
-	cpiAppData := make([]data.Cpi, 0, 50)
+	cpiAppData := make([]economic.Cpi, 0, 50)
 	for _, d := range apiRes.Data {
 		cpiAppData = append(cpiAppData, *s.transform(&d))
 	}
 	return &cpiAppData, nil
 }
 
-func (s CpiAlphaService) transform(apiData *data2.CpiDataValue) *data.Cpi {
+func (s AlphaVantageCpiService) transform(apiData *data2.EconomicValue) *economic.Cpi {
 	cpiDate, err := time.Parse("2006-01-02", apiData.Date)
 	if err != nil {
 		s.Logger.PrintError(err, map[string]interface{}{"cpiAlphaDate": apiData.Date})
@@ -135,14 +132,14 @@ func (s CpiAlphaService) transform(apiData *data2.CpiDataValue) *data.Cpi {
 	if err != nil {
 		s.Logger.PrintError(err, map[string]interface{}{"cpiAlphaValue": apiData.Value})
 	}
-	return &data.Cpi{
+	return &economic.Cpi{
 		Date:  cpiDate,
 		Value: cpiValue,
 	}
 }
 
-func (s CpiAlphaService) insertMany(toSave *[]data.Cpi) error {
-	ctx, cancel := context.WithTimeout(context.Background(), cpiServiceTimeout*time.Second)
+func (s AlphaVantageCpiService) insertMany(toSave *[]economic.Cpi) error {
+	ctx, cancel := context.WithTimeout(context.Background(), serviceTimeout*time.Second)
 	defer cancel()
 	err := s.Models.CpiModel.InsertMany(ctx, toSave)
 	if err != nil {

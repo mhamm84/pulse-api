@@ -18,10 +18,10 @@ func TestCpiAlphaParse(t *testing.T) {
 		]
 	}`
 	byteData := []byte(jsonData)
-	var cpiAlphaResponse CpiAlphaResponse
+	var cpiAlphaResponse AlphaVantageEconomicResponse
 
 	err := json.Unmarshal(byteData, &cpiAlphaResponse)
-	assert.NoError(t, err, "error occurred marshalling CpiAlphaResponse")
+	assert.NoError(t, err, "error occurred marshalling AlphaVantageEconomicResponse")
 	if err != nil {
 		t.Error(err)
 	}

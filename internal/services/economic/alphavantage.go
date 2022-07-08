@@ -8,19 +8,23 @@ import (
 	"time"
 )
 
-type CpiAlphaResponse struct {
-	Name     string         `json:"Name"`
-	Interval string         `json:"Interval"`
-	Unit     string         `json:"Unit"`
-	Data     []CpiAlphaData `json:"Data"`
+const (
+	serviceTimeout = 10
+)
+
+type AlphaVantageEconomicResponse struct {
+	Name     string                     `json:"Name"`
+	Interval string                     `json:"Interval"`
+	Unit     string                     `json:"Unit"`
+	Data     []AlphaVantageEconomicData `json:"Data"`
 }
 
-type CpiAlphaData struct {
+type AlphaVantageEconomicData struct {
 	Date  time.Time `json:"date,string"`
 	Value big.Float `json:"value,string"`
 }
 
-func (l *CpiAlphaData) UnmarshalJSON(j []byte) error {
+func (l *AlphaVantageEconomicData) UnmarshalJSON(j []byte) error {
 	var rawStrings map[string]string
 
 	err := json.Unmarshal(j, &rawStrings)
