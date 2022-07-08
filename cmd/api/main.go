@@ -5,61 +5,84 @@ import (
 	"flag"
 	"fmt"
 	"github.com/common-nighthawk/go-figure"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"log"
+	"github.com/mhamm84/gofinance-alpha/alpha"
+	"github.com/mhamm84/pulse-api/internal/data"
+	"github.com/mhamm84/pulse-api/internal/jsonlog"
 	"os"
 	"time"
+
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 const version = "1.0.0"
+const (
+	dev        = "dev"
+	devCloud   = "dev-cloud"
+	staging    = "stg"
+	uat        = "uat"
+	production = "prod"
+)
 
 type config struct {
 	port int
 	env  string
 	db   struct {
-		uri string
+		dsn          string
+		maxOpenConns int
+		maxIdleConns int
+		maxIdleTime  string
+	}
+	alphaVantage struct {
+		token string
 	}
 }
 
 type application struct {
-	cfg    config
-	logger *log.Logger
+	cfg      config
+	logger   *jsonlog.Logger
+	services Services
 }
 
 func main() {
 	var cfg config
 
-	// Initialize a new logger which writes messages to the standard out stream, // prefixed with the current date and time.
-	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
 	flag.IntVar(&cfg.port, "port", 9091, "Pulse API port number")
-	flag.StringVar(&cfg.env, "env", "dev", "dev|stg|uat|prod")
-	flag.StringVar(&cfg.db.uri, "db_uri", os.Getenv("PULSE_MONGO_URI"), "connection uri of the MongoDB server")
+	flag.StringVar(&cfg.env, "env", devCloud, fmt.Sprintf("%s|%s|%s|%s|%s", dev, devCloud, staging, uat, production))
+	// DB jdbc:postgresql://localhost:5432/pulse
+	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("PULSE_POSTGRES_DSN"), "Postgres DSN")
+	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
+	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
+	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
+
+	flag.StringVar(&cfg.alphaVantage.token, "alpha-vantage-api-token", os.Getenv("ALPHA_VANTAGE_API_TOKEN"), "https://www.alphavantage.co/")
+
 	flag.Parse()
 
 	myFigure := figure.NewColorFigure("Pulse API", "", "green", true)
 	myFigure.Print()
 
-	client, err := openMongo(cfg)
+	db, err := openDB(cfg, *logger)
 	if err != nil {
 		panic(err)
 	}
-	defer func() {
-		if err = client.Disconnect(context.TODO()); err != nil {
-			panic(err)
-		}
-	}()
+
+	// Create Alpha Client
+	alphaClient := alpha.NewClient(cfg.alphaVantage.token)
 
 	app := application{
-		cfg:    cfg,
-		logger: logger,
+		cfg:      cfg,
+		logger:   logger,
+		services: NewAlphaServices(data.NewModels(db), alphaClient, logger),
 	}
+
+	app.startDataSyncs()
 
 	err = app.serve()
 	if err != nil {
-		app.logger.Printf("Error serving app: %s", err.Error())
+		app.logger.PrintFatal(err, nil)
 	}
 
 }
@@ -67,20 +90,32 @@ func main() {
 /*
  * Connect to MongoDB
  */
-func openMongo(cfg config) (*mongo.Client, error) {
-	// Create a new client and connect to the server
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+func openDB(cfg config, logger jsonlog.Logger) (*sqlx.DB, error) {
+	logger.PrintInfo("connecting and pinging postgres", nil)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.db.uri))
+	db, err := sqlx.Open("postgres", cfg.db.dsn)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	// Ping the primary
-	if err := client.Ping(ctx, readpref.Primary()); err != nil {
-		panic(err)
+	// Set the maximum number of open (in-use + idle) connections in the pool. Note that // passing a value less than or equal to 0 will mean there is no limit.
+	db.SetMaxOpenConns(cfg.db.maxOpenConns)
+	// Set the maximum number of idle connections in the pool. Again, passing a value // less than or equal to 0 will mean there is no limit.
+	db.SetMaxIdleConns(cfg.db.maxIdleConns)
+	// Use the time.ParseDuration() function to convert the idle timeout duration string // to a time.Duration type.
+	duration, err := time.ParseDuration(cfg.db.maxIdleTime)
+	if err != nil {
+		return nil, err
 	}
-	fmt.Println("Successfully connected and pinged MongoDB.")
-	return client, nil
+	// Set the maximum idle timeout.
+	db.SetConnMaxIdleTime(duration)
+
+	err = db.PingContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+
 }

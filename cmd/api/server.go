@@ -22,14 +22,19 @@ func (app *application) serve() error {
 
 	shutdownError := make(chan error)
 
-	app.logger.Printf("Starting [%s] Pulse server on Addr: %v", app.cfg.env, srv.Addr)
+	app.logger.PrintInfo("starting Pulse server", map[string]interface{}{
+		"addr": srv.Addr,
+		"env":  app.cfg.env,
+	})
 
 	go func() {
 		quit := make(chan os.Signal, 1)
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 		s := <-quit
 
-		app.logger.Printf("signal caught: %s", s.String())
+		app.logger.PrintInfo("signal caught", map[string]interface{}{
+			"signal": s.String(),
+		})
 
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
@@ -46,7 +51,10 @@ func (app *application) serve() error {
 		return err
 	}
 
-	app.logger.Printf("Stopped [%s] Pulse server on Addr: %v", app.cfg.env, srv.Addr)
+	app.logger.PrintInfo("stopped Pulse server", map[string]interface{}{
+		"addr": srv.Addr,
+		"env":  app.cfg.env,
+	})
 
 	return nil
 }
