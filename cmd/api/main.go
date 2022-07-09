@@ -46,6 +46,7 @@ type config struct {
 	cors struct {
 		trustedOrigins []string
 	}
+	logLevel string
 }
 
 type application struct {
@@ -57,8 +58,7 @@ type application struct {
 func main() {
 	var cfg config
 
-	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
-
+	flag.StringVar(&cfg.logLevel, "log-level", "INFO", "logging level")
 	flag.IntVar(&cfg.port, "port", 9091, "Pulse API port number")
 	flag.StringVar(&cfg.env, "env", devCloud, fmt.Sprintf("%s|%s|%s|%s|%s", dev, devCloud, staging, uat, production))
 	// DB jdbc:postgresql://localhost:5432/pulse
@@ -80,6 +80,8 @@ func main() {
 	})
 
 	flag.Parse()
+
+	logger := jsonlog.New(os.Stdout, jsonlog.GetLevel(cfg.logLevel))
 
 	myFigure := figure.NewColorFigure("Pulse API", "", "green", true)
 	myFigure.Print()

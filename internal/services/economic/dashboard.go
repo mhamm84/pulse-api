@@ -24,7 +24,7 @@ func (s DashboardService) GetDashboardSummary() (*[]economic.Summary, error) {
 	dashData := make([]economic.Summary, 0, 10)
 
 	// CPI
-	latestCpi, err := s.Models.CpiModel.LatestCpiWithPercentChange(ctx)
+	latestCpi, err := s.Models.EconomicModel.LatestWithPercentChange(ctx, cpiTableName)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (s DashboardService) GetDashboardSummary() (*[]economic.Summary, error) {
 	})
 
 	// CONSUMER SENTIMENT
-	latestConsumerSentiment, err := s.Models.ConsumerSentimentModel.LatestConsumerSentimentWithPercentChange(ctx)
+	latestConsumerSentiment, err := s.Models.EconomicModel.LatestWithPercentChange(ctx, consumerSentimentTableName)
 	if err != nil {
 		return nil, err
 	}

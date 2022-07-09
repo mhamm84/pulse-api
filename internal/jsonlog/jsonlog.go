@@ -12,7 +12,8 @@ import (
 type Level int8
 
 const (
-	LevelInfo Level = iota
+	LevelDebug Level = iota
+	LevelInfo
 	LevelError
 	LevelFatal
 	LevelOff
@@ -20,6 +21,8 @@ const (
 
 func (l Level) String() string {
 	switch l {
+	case LevelDebug:
+		return "DEBUG"
 	case LevelInfo:
 		return "INFO"
 	case LevelError:
@@ -28,6 +31,21 @@ func (l Level) String() string {
 		return "FATAL"
 	default:
 		return ""
+	}
+}
+
+func GetLevel(logStr string) Level {
+	switch logStr {
+	case "DEBUG":
+		return LevelDebug
+	case "INFO":
+		return LevelInfo
+	case "ERROR":
+		return LevelError
+	case "FATAL":
+		return LevelFatal
+	default:
+		return LevelOff
 	}
 }
 
@@ -42,6 +60,10 @@ func New(out io.Writer, minLevel Level) *Logger {
 		out:      out,
 		minLevel: minLevel,
 	}
+}
+
+func (l *Logger) PrintDebug(message string, properties map[string]interface{}) {
+	l.print(LevelDebug, message, properties)
 }
 
 func (l *Logger) PrintInfo(message string, properties map[string]interface{}) {

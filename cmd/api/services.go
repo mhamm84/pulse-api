@@ -10,26 +10,19 @@ import (
 )
 
 type Services struct {
-	cpiService               CpiService
-	consumerSentimentService ConsumerSentimentService
-	economicdashservice      EconomicDashboardService
+	alphaVantageEconomicService AlphaVantageEconomicService
+	economicdashservice         EconomicDashboardService
 }
 
 func NewAlphaServices(models data.Models, client *alpha.Client, logger *jsonlog.Logger) Services {
 	return Services{
-		cpiService:               economic.AlphaVantageCpiService{Models: models, Client: client, Logger: logger},
-		consumerSentimentService: economic.AlphaVantageConsumerSentimentService{Models: models, Client: client, Logger: logger},
-		economicdashservice:      economic.DashboardService{Models: models, Logger: logger},
+		alphaVantageEconomicService: economic.AlphaVantageEconomicService{Models: models, Client: client, Logger: logger},
+		economicdashservice:         economic.DashboardService{Models: models, Logger: logger},
 	}
 }
 
-type CpiService interface {
-	CpiGetAll(ctx context.Context) (*[]economic2.Cpi, error)
-	StartDataSyncTask()
-}
-
-type ConsumerSentimentService interface {
-	ConsumerSentimentGetAll(ctx context.Context) (*[]economic2.ConsumerSentiment, error)
+type AlphaVantageEconomicService interface {
+	GetAll(ctx context.Context, tableName string) (*[]economic2.Economic, error)
 	StartDataSyncTask()
 }
 

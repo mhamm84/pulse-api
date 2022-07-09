@@ -6,14 +6,11 @@ import (
 )
 
 type Models struct {
-	CpiModel               economic.CpiModel
-	ConsumerSentimentModel economic.ConsumerSentimentModel
+	EconomicModel economic.EconomicModel
 }
 
 func NewModels(db *sqlx.DB) Models {
-
 	return Models{
-		CpiModel:               economic.CpiModel{DB: db},
-		ConsumerSentimentModel: economic.ConsumerSentimentModel{DB: db},
+		EconomicModel: economic.EconomicModel{DB: db},
 	}
 }
