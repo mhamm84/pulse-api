@@ -21,6 +21,7 @@ const (
 	serviceTimeout                   = 10
 	cpiTableName                     = "cpi"
 	consumerSentimentTableName       = "consumer_sentiment"
+	retailSalesTableName             = "retail_sales"
 	treasuryYieldThreeMonthTableName = "treasury_yield_three_month"
 	treasuryYieldTwoYearTableName    = "treasury_yield_two_year"
 	treasuryYieldFiveYearTableName   = "treasury_yield_five_year"
@@ -92,6 +93,7 @@ func (s AlphaVantageEconomicService) StartDataSyncTask() {
 	s.start(nil, s.Client.Cpi, cpiTableName, s.Models.EconomicModel.GetAll)
 	s.start(nil, s.Client.ConsumerSentiment, consumerSentimentTableName, s.Models.EconomicModel.GetAll)
 	s.addTreasuryYields()
+	s.start(nil, s.Client.RetailSales, retailSalesTableName, s.Models.EconomicModel.GetAll)
 }
 
 func (s AlphaVantageEconomicService) addTreasuryYields() {

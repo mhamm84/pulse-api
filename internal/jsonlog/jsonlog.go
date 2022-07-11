@@ -52,7 +52,7 @@ func GetLevel(logStr string) Level {
 type Logger struct {
 	out      io.Writer
 	minLevel Level
-	mu       *sync.Mutex
+	mu       sync.Mutex
 }
 
 func New(out io.Writer, minLevel Level) *Logger {
