@@ -40,3 +40,4 @@
 .idea/**/uiDesigner.xml
 .idea/**/dbnavigator.xml
 /docker/.env
+/.envrc

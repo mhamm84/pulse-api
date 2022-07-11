@@ -29,7 +29,7 @@ func (m *EconomicModel) LatestWithPercentChange(ctx context.Context, table strin
 			SELECT
 		    	time,
 		    	value,
-		    	ROUND(100.0 * (1 - LEAD(value) OVER (ORDER BY time desc) / value),2) AS percentage_change
+		    	100.0 * (1 - LEAD(value) OVER (ORDER BY time desc) / value) AS percentage_change
 			FROM %s
 			ORDER BY time DESC
 			LIMIT 1`, table)

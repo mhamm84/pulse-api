@@ -1,3 +1,2 @@
 DROP TABLE IF EXISTS cpi;
-DROP TABLE IF EXISTS consumer_sentiment;
 DROP TABLE IF EXISTS report;

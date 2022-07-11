@@ -18,9 +18,15 @@ import (
 )
 
 const (
-	serviceTimeout             = 10
-	cpiTableName               = "cpi"
-	consumerSentimentTableName = "consumer_sentiment"
+	serviceTimeout                   = 10
+	cpiTableName                     = "cpi"
+	consumerSentimentTableName       = "consumer_sentiment"
+	treasuryYieldThreeMonthTableName = "treasury_yield_three_month"
+	treasuryYieldTwoYearTableName    = "treasury_yield_two_year"
+	treasuryYieldFiveYearTableName   = "treasury_yield_five_year"
+	treasuryYieldSevenYearTableName  = "treasury_yield_seven_year"
+	treasuryYieldTenYearTableName    = "treasury_yield_ten_year"
+	treasuryYieldThirtyYearTableName = "treasury_yield_thirty_year"
 )
 
 type alphaEconomicCall func(opts *alpha.Options) (*data2.EconomicResponse, error)
@@ -34,8 +40,8 @@ type AlphaVantageEconomicResponse struct {
 }
 
 type AlphaVantageEconomicData struct {
-	Date  time.Time `json:"date,string"`
-	Value big.Float `json:"value,string"`
+	Date  time.Time `json:"date"`
+	Value big.Float `json:"value"`
 }
 
 func (l *AlphaVantageEconomicData) UnmarshalJSON(j []byte) error {
@@ -85,6 +91,22 @@ func (s AlphaVantageEconomicService) GetAll(ctx context.Context, tableName strin
 func (s AlphaVantageEconomicService) StartDataSyncTask() {
 	s.start(nil, s.Client.Cpi, cpiTableName, s.Models.EconomicModel.GetAll)
 	s.start(nil, s.Client.ConsumerSentiment, consumerSentimentTableName, s.Models.EconomicModel.GetAll)
+	s.addTreasuryYields()
+}
+
+func (s AlphaVantageEconomicService) addTreasuryYields() {
+	threeMonthOptions := alpha.Options{Interval: alpha.Daily, Maturity: alpha.ThreeMonth}
+	s.start(&threeMonthOptions, s.Client.TreasuryYield, treasuryYieldThreeMonthTableName, s.Models.EconomicModel.GetAll)
+	twoYearOptions := alpha.Options{Interval: alpha.Daily, Maturity: alpha.TwoYear}
+	s.start(&twoYearOptions, s.Client.TreasuryYield, treasuryYieldTwoYearTableName, s.Models.EconomicModel.GetAll)
+	fiveYearOptions := alpha.Options{Interval: alpha.Daily, Maturity: alpha.FiveYear}
+	s.start(&fiveYearOptions, s.Client.TreasuryYield, treasuryYieldFiveYearTableName, s.Models.EconomicModel.GetAll)
+	sevenYearOptions := alpha.Options{Interval: alpha.Daily, Maturity: alpha.SevenYear}
+	s.start(&sevenYearOptions, s.Client.TreasuryYield, treasuryYieldSevenYearTableName, s.Models.EconomicModel.GetAll)
+	tenYearOptions := alpha.Options{Interval: alpha.Daily, Maturity: alpha.TenYear}
+	s.start(&tenYearOptions, s.Client.TreasuryYield, treasuryYieldTenYearTableName, s.Models.EconomicModel.GetAll)
+	thirtyYearOptions := alpha.Options{Interval: alpha.Daily, Maturity: alpha.ThirtyYear}
+	s.start(&thirtyYearOptions, s.Client.TreasuryYield, treasuryYieldThirtyYearTableName, s.Models.EconomicModel.GetAll)
 }
 
 func (s AlphaVantageEconomicService) start(opts *alpha.Options, apiCall alphaEconomicCall, tableName string, getAll getAllEconomic) {

@@ -18,17 +18,7 @@ VALUES ('CPI', 'monthly consumer price index (CPI) of the United States. CPI is 
 -- ####################################################################################################
 CREATE TABLE IF NOT EXISTS cpi (
     time TIMESTAMP WITH TIME ZONE NOT NULL,
-    value NUMERIC(15,6) NOT NULL
+    value DOUBLE PRECISION NOT NULL
 );
 
 SELECT create_hypertable('cpi', 'time', chunk_time_interval => INTERVAL '1 year');
-
--- ####################################################################################################
--- consumer_sentiment
--- ####################################################################################################
-CREATE TABLE IF NOT EXISTS consumer_sentiment (
-    time TIMESTAMP WITH TIME ZONE NOT NULL,
-    value NUMERIC(15,6) NOT NULL
-);
-
-SELECT create_hypertable('consumer_sentiment', 'time', chunk_time_interval => INTERVAL '1 year');

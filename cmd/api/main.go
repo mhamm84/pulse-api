@@ -16,8 +16,9 @@ import (
 	_ "github.com/lib/pq"
 )
 
-const version = "1.0.0"
 const (
+	version = "1.0.0"
+
 	dev        = "dev"
 	devCloud   = "dev-cloud"
 	staging    = "stg"
@@ -62,7 +63,7 @@ func main() {
 	flag.IntVar(&cfg.port, "port", 9091, "Pulse API port number")
 	flag.StringVar(&cfg.env, "env", devCloud, fmt.Sprintf("%s|%s|%s|%s|%s", dev, devCloud, staging, uat, production))
 	// DB jdbc:postgresql://localhost:5432/pulse
-	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("PULSE_POSTGRES_DSN"), "Postgres DSN")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", "db-dsn", "Postgres DSN")
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
 	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
 	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
