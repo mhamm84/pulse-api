@@ -44,3 +44,9 @@ audit:
 	staticcheck ./...
 	@echo 'Running tests...'
 	go test -race -vet=off ./...
+
+.PHONY: build/api
+build/api:
+	@echo "Building pulse API..."
+	go build -o=./bin/api ./cmd/api/
+	GOOS=linux GOARCH=amd64 go build -o=./bin/linux_amd64/api ./cmd/api/

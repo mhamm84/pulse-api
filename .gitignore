@@ -41,3 +41,4 @@
 .idea/**/dbnavigator.xml
 /docker/.env
 /.envrc
+/bin/

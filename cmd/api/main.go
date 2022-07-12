@@ -20,7 +20,6 @@ const (
 	version = "1.0.0"
 
 	dev        = "dev"
-	devCloud   = "dev-cloud"
 	staging    = "stg"
 	uat        = "uat"
 	production = "prod"
@@ -57,11 +56,12 @@ type application struct {
 }
 
 func main() {
+	// Parse arguments passed in on startup
 	var cfg config
 
 	flag.StringVar(&cfg.logLevel, "log-level", "INFO", "logging level")
 	flag.IntVar(&cfg.port, "port", 9091, "Pulse API port number")
-	flag.StringVar(&cfg.env, "env", devCloud, fmt.Sprintf("%s|%s|%s|%s|%s", dev, devCloud, staging, uat, production))
+	flag.StringVar(&cfg.env, "env", dev, fmt.Sprintf("%s|%s|%s|%s|%s", dev, staging, uat, production))
 	// DB jdbc:postgresql://localhost:5432/pulse
 	flag.StringVar(&cfg.db.dsn, "db-dsn", "db-dsn", "Postgres DSN")
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
@@ -79,14 +79,16 @@ func main() {
 		cfg.cors.trustedOrigins = strings.Fields(val)
 		return nil
 	})
-
 	flag.Parse()
 
+	// Setup logging
 	logger := jsonlog.New(os.Stdout, jsonlog.GetLevel(cfg.logLevel))
 
+	// Fancy ascii splash when starting the app
 	myFigure := figure.NewColorFigure("Pulse API", "", "green", true)
 	myFigure.Print()
 
+	// Connect to the database
 	db, err := openDB(cfg, *logger)
 	if err != nil {
 		panic(err)
@@ -94,15 +96,15 @@ func main() {
 
 	// Create Alpha Client
 	alphaClient := alpha.NewClient(cfg.alphaVantage.baseUrl, cfg.alphaVantage.token)
-
+	// Create the app
 	app := application{
 		cfg:      cfg,
 		logger:   logger,
 		services: NewAlphaServices(data.NewModels(db), alphaClient, logger),
 	}
-
+	// Start the data sync tasks to keep data from the API up to date in the DB
 	app.startDataSyncs()
-
+	// Serve the API
 	err = app.serve()
 	if err != nil {
 		app.logger.PrintFatal(err, nil)
@@ -121,16 +123,12 @@ func openDB(cfg config, logger jsonlog.Logger) (*sqlx.DB, error) {
 		return nil, err
 	}
 
-	// Set the maximum number of open (in-use + idle) connections in the pool. Note that // passing a value less than or equal to 0 will mean there is no limit.
 	db.SetMaxOpenConns(cfg.db.maxOpenConns)
-	// Set the maximum number of idle connections in the pool. Again, passing a value // less than or equal to 0 will mean there is no limit.
 	db.SetMaxIdleConns(cfg.db.maxIdleConns)
-	// Use the time.ParseDuration() function to convert the idle timeout duration string // to a time.Duration type.
 	duration, err := time.ParseDuration(cfg.db.maxIdleTime)
 	if err != nil {
 		return nil, err
 	}
-	// Set the maximum idle timeout.
 	db.SetConnMaxIdleTime(duration)
 
 	err = db.PingContext(ctx)
