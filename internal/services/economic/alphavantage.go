@@ -10,25 +10,16 @@ import (
 	"github.com/mhamm84/pulse-api/internal/data/economic"
 	"github.com/mhamm84/pulse-api/internal/jsonlog"
 	"github.com/mhamm84/pulse-api/internal/utils"
+	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
+	"golang.org/x/time/rate"
 	"math/big"
 	"strconv"
 	"strings"
 	"time"
 )
 
-const (
-	serviceTimeout                   = 10
-	cpiTableName                     = "cpi"
-	consumerSentimentTableName       = "consumer_sentiment"
-	retailSalesTableName             = "retail_sales"
-	treasuryYieldThreeMonthTableName = "treasury_yield_three_month"
-	treasuryYieldTwoYearTableName    = "treasury_yield_two_year"
-	treasuryYieldFiveYearTableName   = "treasury_yield_five_year"
-	treasuryYieldSevenYearTableName  = "treasury_yield_seven_year"
-	treasuryYieldTenYearTableName    = "treasury_yield_ten_year"
-	treasuryYieldThirtyYearTableName = "treasury_yield_thirty_year"
-)
+const serviceTimeout = 10
 
 type alphaEconomicCall func(opts *alpha.Options) (*data2.EconomicResponse, error)
 type getAllEconomic func(ctx context.Context, tableName string) (*[]economic.Economic, error)
@@ -74,15 +65,35 @@ func (l *AlphaVantageEconomicData) UnmarshalJSON(j []byte) error {
 }
 
 type AlphaVantageEconomicService struct {
-	Models data.Models
-	Client *alpha.Client
-	Logger *jsonlog.Logger
+	Models  data.Models
+	Client  *alpha.Client
+	Logger  *jsonlog.Logger
+	Limiter AlphaVantageLimiter
+}
+
+type AlphaVantageLimiter struct {
+	MinuteLimiter *rate.Limiter
+	DailyLimiter  *rate.Limiter
+}
+
+func (s AlphaVantageEconomicService) GetIntervalWithPercentChange(reportType economic.ReportType, years int) (*[]economic.EconomicWithChange, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), serviceTimeout*time.Second)
+	defer cancel()
+
+	data, err := s.Models.EconomicModel.GetIntervalWithPercentChange(ctx, economic.TableFromReportType(reportType), years)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 // GetAll Gets all the data for an economic table
 // if no data is found, a request is sent to the API to get the data to populate the DB
-func (s AlphaVantageEconomicService) GetAll(ctx context.Context, tableName string) (*[]economic.Economic, error) {
-	data, err := s.Models.EconomicModel.GetAll(ctx, tableName)
+func (s AlphaVantageEconomicService) GetAll(reportType economic.ReportType) (*[]economic.Economic, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), serviceTimeout*time.Second)
+	defer cancel()
+
+	data, err := s.Models.EconomicModel.GetAll(ctx, economic.TableFromReportType(reportType))
 	if err != nil {
 		return nil, err
 	}
@@ -90,28 +101,28 @@ func (s AlphaVantageEconomicService) GetAll(ctx context.Context, tableName strin
 }
 
 func (s AlphaVantageEconomicService) StartDataSyncTask() {
-	s.start(nil, s.Client.Cpi, cpiTableName, s.Models.EconomicModel.GetAll)
-	s.start(nil, s.Client.ConsumerSentiment, consumerSentimentTableName, s.Models.EconomicModel.GetAll)
-	s.addTreasuryYields()
-	s.start(nil, s.Client.RetailSales, retailSalesTableName, s.Models.EconomicModel.GetAll)
+	start(s, nil, s.Client.Cpi, economic.TableFromReportType(economic.CPI), s.Models.EconomicModel.GetAll)
+	start(s, nil, s.Client.ConsumerSentiment, economic.TableFromReportType(economic.ConsumerSentiment), s.Models.EconomicModel.GetAll)
+	addTreasuryYields(s)
+	start(s, nil, s.Client.RetailSales, economic.TableFromReportType(economic.RetailSales), s.Models.EconomicModel.GetAll)
 }
 
-func (s AlphaVantageEconomicService) addTreasuryYields() {
+func addTreasuryYields(s AlphaVantageEconomicService) {
 	threeMonthOptions := alpha.Options{Interval: alpha.Daily, Maturity: alpha.ThreeMonth}
-	s.start(&threeMonthOptions, s.Client.TreasuryYield, treasuryYieldThreeMonthTableName, s.Models.EconomicModel.GetAll)
+	start(s, &threeMonthOptions, s.Client.TreasuryYield, economic.TableFromReportType(economic.TreasuryYieldThreeMonth), s.Models.EconomicModel.GetAll)
 	twoYearOptions := alpha.Options{Interval: alpha.Daily, Maturity: alpha.TwoYear}
-	s.start(&twoYearOptions, s.Client.TreasuryYield, treasuryYieldTwoYearTableName, s.Models.EconomicModel.GetAll)
+	start(s, &twoYearOptions, s.Client.TreasuryYield, economic.TableFromReportType(economic.TreasuryYieldTwoYear), s.Models.EconomicModel.GetAll)
 	fiveYearOptions := alpha.Options{Interval: alpha.Daily, Maturity: alpha.FiveYear}
-	s.start(&fiveYearOptions, s.Client.TreasuryYield, treasuryYieldFiveYearTableName, s.Models.EconomicModel.GetAll)
+	start(s, &fiveYearOptions, s.Client.TreasuryYield, economic.TableFromReportType(economic.TreasuryYieldFiveYear), s.Models.EconomicModel.GetAll)
 	sevenYearOptions := alpha.Options{Interval: alpha.Daily, Maturity: alpha.SevenYear}
-	s.start(&sevenYearOptions, s.Client.TreasuryYield, treasuryYieldSevenYearTableName, s.Models.EconomicModel.GetAll)
+	start(s, &sevenYearOptions, s.Client.TreasuryYield, economic.TableFromReportType(economic.TreasuryYieldSevenYear), s.Models.EconomicModel.GetAll)
 	tenYearOptions := alpha.Options{Interval: alpha.Daily, Maturity: alpha.TenYear}
-	s.start(&tenYearOptions, s.Client.TreasuryYield, treasuryYieldTenYearTableName, s.Models.EconomicModel.GetAll)
+	start(s, &tenYearOptions, s.Client.TreasuryYield, economic.TableFromReportType(economic.TreasuryYieldTenYear), s.Models.EconomicModel.GetAll)
 	thirtyYearOptions := alpha.Options{Interval: alpha.Daily, Maturity: alpha.ThirtyYear}
-	s.start(&thirtyYearOptions, s.Client.TreasuryYield, treasuryYieldThirtyYearTableName, s.Models.EconomicModel.GetAll)
+	start(s, &thirtyYearOptions, s.Client.TreasuryYield, economic.TableFromReportType(economic.TreasuryYieldThirtyYear), s.Models.EconomicModel.GetAll)
 }
 
-func (s AlphaVantageEconomicService) start(opts *alpha.Options, apiCall alphaEconomicCall, tableName string, getAll getAllEconomic) {
+func start(s AlphaVantageEconomicService, opts *alpha.Options, apiCall alphaEconomicCall, tableName string, getAll getAllEconomic) {
 	tr := utils.NewScheduleTaskRunner(5*time.Second, 24*time.Hour, s.Logger)
 	tr.Start(func() {
 		s.Logger.PrintInfo("StartDataSyncTask", map[string]interface{}{
@@ -126,15 +137,13 @@ func (s AlphaVantageEconomicService) start(opts *alpha.Options, apiCall alphaEco
 			s.Logger.PrintError(err, nil)
 			return
 		}
-
 		// Initially Empty, Get data from API and insert
 		if len(*data) <= 0 {
 			s.Logger.PrintInfo(fmt.Sprintf("no data found in DB for %s, getting from API", tableName), map[string]interface{}{
 				"task": "StartDataSyncTask",
 			})
-			apiData, err := s.getDataFromApi(opts, apiCall)
-			if err != nil {
-				s.Logger.PrintError(err, nil)
+			apiData := processApiCall(s, opts, apiCall, tableName)
+			if apiData == nil {
 				return
 			}
 			s.Logger.PrintInfo(fmt.Sprintf("inserting %s API data into DB", tableName), map[string]interface{}{
@@ -153,14 +162,31 @@ func (s AlphaVantageEconomicService) start(opts *alpha.Options, apiCall alphaEco
 			s.Logger.PrintInfo(fmt.Sprintf("existing %s data in DB, checking API for updates", tableName), map[string]interface{}{
 				"task": "StartDataSyncTask",
 			})
-			apiData, err := s.getDataFromApi(opts, apiCall)
-			if err != nil {
-				s.Logger.PrintError(err, nil)
-				return
+			apiData := processApiCall(s, opts, apiCall, tableName)
+
+			if apiData != nil {
+				s.insertNewData(ctx, tableName, apiData, data)
 			}
-			s.insertNewData(ctx, tableName, apiData, data)
 		}
 	})
+}
+
+func processApiCall(s AlphaVantageEconomicService, opts *alpha.Options, apiCall alphaEconomicCall, tableName string) *[]economic.Economic {
+	apiData, err := s.getDataFromApi(opts, apiCall)
+	if err != nil {
+		s.Logger.PrintWarning("error getting data from Alpha Vantage API", map[string]interface{}{
+			"tableName": tableName,
+			"error":     err.Error(),
+		})
+		return nil
+	}
+	if apiData == nil || len(*apiData) == 0 {
+		s.Logger.PrintWarning("Alpha Vantage API call returned empty", map[string]interface{}{
+			"data to extract": tableName,
+		})
+		return nil
+	}
+	return apiData
 }
 
 func (s AlphaVantageEconomicService) insertNewData(
@@ -190,6 +216,14 @@ func (s AlphaVantageEconomicService) insertNewData(
 }
 
 func (s AlphaVantageEconomicService) getDataFromApi(opts *alpha.Options, apiCall alphaEconomicCall) (*[]economic.Economic, error) {
+	// Check the API limits
+	if !s.Limiter.DailyLimiter.Allow() {
+		return nil, errors.New("hit daily limit when calling Alpha Advantage")
+	}
+	if !s.Limiter.MinuteLimiter.Allow() {
+		return nil, errors.New("hit minute limit when calling Alpha Advantage")
+	}
+
 	apiRes, err := apiCall(opts)
 	if err != nil {
 		s.Logger.PrintError(err, nil)
@@ -228,7 +262,9 @@ func (s AlphaVantageEconomicService) insertMany(toSave *[]economic.Economic, tab
 	defer cancel()
 	err := s.Models.EconomicModel.InsertMany(ctx, tableName, toSave)
 	if err != nil {
-		s.Logger.PrintError(err, nil)
+		s.Logger.PrintError(err, map[string]interface{}{
+			"tableName": tableName,
+		})
 		return err
 	}
 	return nil

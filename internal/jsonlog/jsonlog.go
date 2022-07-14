@@ -14,6 +14,7 @@ type Level int8
 const (
 	LevelDebug Level = iota
 	LevelInfo
+	LevelWarning
 	LevelError
 	LevelFatal
 	LevelOff
@@ -25,6 +26,8 @@ func (l Level) String() string {
 		return "DEBUG"
 	case LevelInfo:
 		return "INFO"
+	case LevelWarning:
+		return "WARNING"
 	case LevelError:
 		return "ERROR"
 	case LevelFatal:
@@ -40,6 +43,8 @@ func GetLevel(logStr string) Level {
 		return LevelDebug
 	case "INFO":
 		return LevelInfo
+	case "WARNING":
+		return LevelWarning
 	case "ERROR":
 		return LevelError
 	case "FATAL":
@@ -68,6 +73,10 @@ func (l *Logger) PrintDebug(message string, properties map[string]interface{}) {
 
 func (l *Logger) PrintInfo(message string, properties map[string]interface{}) {
 	l.print(LevelInfo, message, properties)
+}
+
+func (l *Logger) PrintWarning(message string, properties map[string]interface{}) {
+	l.print(LevelWarning, message, properties)
 }
 
 func (l *Logger) PrintError(err error, properties map[string]interface{}) {

@@ -24,13 +24,13 @@ func (s DashboardService) GetDashboardSummary() (*[]economic.SummaryHeader, erro
 
 	dashData := make([]economic.SummaryHeader, 0, 10)
 
-	if cpiSummary := s.createDashSummary(ctx, cpiTableName, "CPI"); cpiSummary != nil {
+	if cpiSummary := s.createDashSummary(ctx, economic.CPI.ToTable(), "CPI"); cpiSummary != nil {
 		dashData = append(dashData, economic.SummaryHeader{
 			HeaderName: "Monthly CPI",
 			Summaries:  []economic.Summary{*cpiSummary},
 		})
 	}
-	if consumerSummary := s.createDashSummary(ctx, consumerSentimentTableName, "Consumer Sentiment"); consumerSummary != nil {
+	if consumerSummary := s.createDashSummary(ctx, economic.ConsumerSentiment.ToTable(), "Consumer Sentiment"); consumerSummary != nil {
 		dashData = append(dashData, economic.SummaryHeader{
 			HeaderName: "Monthly Consumer Sentiment",
 			Summaries:  []economic.Summary{*consumerSummary},
@@ -38,14 +38,14 @@ func (s DashboardService) GetDashboardSummary() (*[]economic.SummaryHeader, erro
 	}
 
 	treasurySummaries := []economic.Summary{}
-	s.add(ctx, &treasurySummaries, treasuryYieldThreeMonthTableName, "Treasury Yield - 3 Months")
-	s.add(ctx, &treasurySummaries, treasuryYieldTwoYearTableName, "Treasury Yield - 2 Years")
-	s.add(ctx, &treasurySummaries, treasuryYieldThreeMonthTableName, "Treasury Yield - 5 Years")
-	s.add(ctx, &treasurySummaries, treasuryYieldFiveYearTableName, "Treasury Yield - 7 Years")
-	s.add(ctx, &treasurySummaries, treasuryYieldTenYearTableName, "Treasury Yield - 10 Years")
-	s.add(ctx, &treasurySummaries, treasuryYieldThirtyYearTableName, "Treasury Yield - 30 Years")
+	s.add(ctx, &treasurySummaries, economic.TreasuryYieldThreeMonth.ToTable(), "Treasury Yield - 3 Months")
+	s.add(ctx, &treasurySummaries, economic.TreasuryYieldTwoYear.ToTable(), "Treasury Yield - 2 Years")
+	s.add(ctx, &treasurySummaries, economic.TreasuryYieldFiveYear.ToTable(), "Treasury Yield - 5 Years")
+	s.add(ctx, &treasurySummaries, economic.TreasuryYieldSevenYear.ToTable(), "Treasury Yield - 7 Years")
+	s.add(ctx, &treasurySummaries, economic.TreasuryYieldTenYear.ToTable(), "Treasury Yield - 10 Years")
+	s.add(ctx, &treasurySummaries, economic.TreasuryYieldThirtyYear.ToTable(), "Treasury Yield - 30 Years")
 
-	if retailSalesSummary := s.createDashSummary(ctx, retailSalesTableName, "Retail Sales"); retailSalesSummary != nil {
+	if retailSalesSummary := s.createDashSummary(ctx, economic.RetailSales.ToTable(), "Retail Sales"); retailSalesSummary != nil {
 		dashData = append(dashData, economic.SummaryHeader{
 			HeaderName: "Monthly Retail Sales",
 			Summaries:  []economic.Summary{*retailSalesSummary},
@@ -82,6 +82,6 @@ func (s DashboardService) createDashSummary(ctx context.Context, tableName, dash
 		Name:       dashHeader,
 		LastUpdate: latestWithChange.Date,
 		Value:      latestWithChange.Value,
-		Change:     latestWithChange.Change,
+		Change:     *latestWithChange.Change,
 	}
 }

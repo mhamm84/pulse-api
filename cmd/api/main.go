@@ -61,7 +61,7 @@ func main() {
 
 	flag.StringVar(&cfg.logLevel, "log-level", "INFO", "logging level")
 	flag.IntVar(&cfg.port, "port", 9091, "Pulse API port number")
-	flag.StringVar(&cfg.env, "env", dev, fmt.Sprintf("%s|%s|%s|%s|%s", dev, staging, uat, production))
+	flag.StringVar(&cfg.env, "env", dev, fmt.Sprintf("%s|%s|%s|%s", dev, staging, uat, production))
 	// DB jdbc:postgresql://localhost:5432/pulse
 	flag.StringVar(&cfg.db.dsn, "db-dsn", "db-dsn", "Postgres DSN")
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
@@ -103,7 +103,7 @@ func main() {
 		services: NewAlphaServices(data.NewModels(db), alphaClient, logger),
 	}
 	// Start the data sync tasks to keep data from the API up to date in the DB
-	app.startDataSyncs()
+	//app.startDataSyncs()
 	// Serve the API
 	err = app.serve()
 	if err != nil {
@@ -137,5 +137,4 @@ func openDB(cfg config, logger jsonlog.Logger) (*sqlx.DB, error) {
 	}
 
 	return db, nil
-
 }
