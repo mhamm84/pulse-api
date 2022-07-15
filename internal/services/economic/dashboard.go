@@ -50,7 +50,7 @@ func addTreasuryExtras(reportType data.ReportType) map[string]interface{} {
 }
 
 func (s DashboardService) add(ctx context.Context, summaries *[]data.Summary, tableName, dashHeader string, extras map[string]interface{}) {
-	if summary := s.createDashSummary(ctx, tableNa:qme, dashHeader, extras); summary != nil {
+	if summary := s.createDashSummary(ctx, tableName, dashHeader, extras); summary != nil {
 		*summaries = append(*summaries, *summary)
 	}
 }
