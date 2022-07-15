@@ -2,7 +2,6 @@ package economic
 
 import (
 	"context"
-	"fmt"
 	"github.com/mhamm84/pulse-api/internal/data"
 	"github.com/mhamm84/pulse-api/internal/jsonlog"
 	"time"
@@ -17,57 +16,46 @@ type DashboardService struct {
 	Logger *jsonlog.Logger
 }
 
-func (s DashboardService) GetDashboardSummary() (*[]data.SummaryHeader, error) {
+func (s DashboardService) GetDashboardSummary() (*[]data.Summary, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dashboardTimeout*time.Second)
 	defer cancel()
 
-	dashData := make([]data.SummaryHeader, 0, 10)
+	dashData := make([]data.Summary, 0, 10)
 
-	if cpiSummary := s.createDashSummary(ctx, data.CPI.ToTable(), "CPI"); cpiSummary != nil {
-		dashData = append(dashData, data.SummaryHeader{
-			HeaderName: "Monthly CPI",
-			Summaries:  []data.Summary{*cpiSummary},
-		})
+	if cpiSummary := s.createDashSummary(ctx, data.CPI.ToTable(), "CPI", nil); cpiSummary != nil {
+		dashData = append(dashData, *cpiSummary)
 	}
-	if consumerSummary := s.createDashSummary(ctx, data.ConsumerSentiment.ToTable(), "Consumer Sentiment"); consumerSummary != nil {
-		dashData = append(dashData, data.SummaryHeader{
-			HeaderName: "Monthly Consumer Sentiment",
-			Summaries:  []data.Summary{*consumerSummary},
-		})
+	if consumerSummary := s.createDashSummary(ctx, data.ConsumerSentiment.ToTable(), "Consumer Sentiment", nil); consumerSummary != nil {
+		dashData = append(dashData, *consumerSummary)
+	}
+
+	if retailSalesSummary := s.createDashSummary(ctx, data.RetailSales.ToTable(), "Retail Sales", nil); retailSalesSummary != nil {
+		dashData = append(dashData, *retailSalesSummary)
 	}
 
 	treasurySummaries := []data.Summary{}
-	s.add(ctx, &treasurySummaries, data.TreasuryYieldThreeMonth.ToTable(), "Treasury Yield - 3 Months")
-	s.add(ctx, &treasurySummaries, data.TreasuryYieldTwoYear.ToTable(), "Treasury Yield - 2 Years")
-	s.add(ctx, &treasurySummaries, data.TreasuryYieldFiveYear.ToTable(), "Treasury Yield - 5 Years")
-	s.add(ctx, &treasurySummaries, data.TreasuryYieldSevenYear.ToTable(), "Treasury Yield - 7 Years")
-	s.add(ctx, &treasurySummaries, data.TreasuryYieldTenYear.ToTable(), "Treasury Yield - 10 Years")
-	s.add(ctx, &treasurySummaries, data.TreasuryYieldThirtyYear.ToTable(), "Treasury Yield - 30 Years")
+	s.add(ctx, &treasurySummaries, data.TreasuryYieldThreeMonth.ToTable(), "3M Treasury Yield", addTreasuryExtras(data.TreasuryYieldThreeMonth))
+	s.add(ctx, &treasurySummaries, data.TreasuryYieldTwoYear.ToTable(), "2Y Treasury Yield", addTreasuryExtras(data.TreasuryYieldTwoYear))
+	s.add(ctx, &treasurySummaries, data.TreasuryYieldFiveYear.ToTable(), "5Y Treasury Yield", addTreasuryExtras(data.TreasuryYieldFiveYear))
+	s.add(ctx, &treasurySummaries, data.TreasuryYieldSevenYear.ToTable(), "7Y Treasury Yield", addTreasuryExtras(data.TreasuryYieldSevenYear))
+	s.add(ctx, &treasurySummaries, data.TreasuryYieldTenYear.ToTable(), "10Y Treasury Yield", addTreasuryExtras(data.TreasuryYieldTenYear))
+	s.add(ctx, &treasurySummaries, data.TreasuryYieldThirtyYear.ToTable(), "30Y Treasury Yield", addTreasuryExtras(data.TreasuryYieldThirtyYear))
 
-	if retailSalesSummary := s.createDashSummary(ctx, data.RetailSales.ToTable(), "Retail Sales"); retailSalesSummary != nil {
-		dashData = append(dashData, data.SummaryHeader{
-			HeaderName: "Monthly Retail Sales",
-			Summaries:  []data.Summary{*retailSalesSummary},
-		})
-	}
-
-	fmt.Println(treasurySummaries)
-
-	dashData = append(dashData, data.SummaryHeader{
-		HeaderName: "Treasury Yields",
-		Summaries:  treasurySummaries,
-	})
-
+	dashData = append(dashData, treasurySummaries...)
 	return &dashData, nil
 }
 
-func (s DashboardService) add(ctx context.Context, summaries *[]data.Summary, tableName, dashHeader string) {
-	if summary := s.createDashSummary(ctx, tableName, dashHeader); summary != nil {
+func addTreasuryExtras(reportType data.ReportType) map[string]interface{} {
+	return map[string]interface{}{"maturity": data.MaturityFromReportType(reportType)}
+}
+
+func (s DashboardService) add(ctx context.Context, summaries *[]data.Summary, tableName, dashHeader string, extras map[string]interface{}) {
+	if summary := s.createDashSummary(ctx, tableNa:qme, dashHeader, extras); summary != nil {
 		*summaries = append(*summaries, *summary)
 	}
 }
 
-func (s DashboardService) createDashSummary(ctx context.Context, tableName, dashHeader string) *data.Summary {
+func (s DashboardService) createDashSummary(ctx context.Context, tableName, dashHeader string, extras map[string]interface{}) *data.Summary {
 	latestWithChange, err := s.Models.EconomicModel.LatestWithPercentChange(ctx, tableName)
 	if err != nil {
 		s.Logger.PrintInfo("error getting LatestWithPercentChange data for dashboard summary", map[string]interface{}{
@@ -82,5 +70,7 @@ func (s DashboardService) createDashSummary(ctx context.Context, tableName, dash
 		LastUpdate: latestWithChange.Date,
 		Value:      latestWithChange.Value,
 		Change:     *latestWithChange.Change,
+		Slug:       tableName,
+		Extras:     extras,
 	}
 }

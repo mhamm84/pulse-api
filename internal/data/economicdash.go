@@ -5,14 +5,11 @@ import (
 	"time"
 )
 
-type SummaryHeader struct {
-	HeaderName string    `json:"headerName"`
-	Summaries  []Summary `json:"summaries"`
-}
-
 type Summary struct {
-	Name       string          `json:"name"`
-	LastUpdate time.Time       `json:"lastUpdate"`
-	Value      decimal.Decimal `json:"value"`
-	Change     decimal.Decimal `json:"change"`
+	Name       string                 `json:"name"`
+	LastUpdate time.Time              `json:"lastUpdate"`
+	Value      decimal.Decimal        `json:"value"`
+	Change     decimal.Decimal        `json:"change"`
+	Slug       string                 `json:"slug"`
+	Extras     map[string]interface{} `json:"extras"`
 }

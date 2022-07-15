@@ -8,7 +8,7 @@ func (app *application) economicDashHandler(w http.ResponseWriter, r *http.Reque
 		app.serverErrorResponse(w, r, err)
 	}
 	env := envelope{
-		"summaries": &data,
+		"economicSummaries": &data,
 	}
 	app.WriteJson(w, http.StatusOK, env, nil)
 }

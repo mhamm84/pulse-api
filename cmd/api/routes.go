@@ -17,9 +17,9 @@ func (app *application) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodGet, pathWithVersion("/%s/economic/dashboard"), app.economicDashHandler)
 	router.HandlerFunc(http.MethodGet, pathWithVersion("/%s/economic/cpi"), app.cpiDataByYears)
-	router.HandlerFunc(http.MethodGet, pathWithVersion("/%s/economic/consumersentiment"), app.consumerSentimentDataByYears)
-	router.HandlerFunc(http.MethodGet, pathWithVersion("/%s/economic/retailsales"), app.retailSalesDataByYears)
-	router.HandlerFunc(http.MethodGet, pathWithVersion("/%s/economic/treasuryYield/:maturity"), app.treasuryYieldByYears)
+	router.HandlerFunc(http.MethodGet, pathWithVersion("/%s/economic/consumer_sentiment"), app.consumerSentimentDataByYears)
+	router.HandlerFunc(http.MethodGet, pathWithVersion("/%s/economic/retail_sales"), app.retailSalesDataByYears)
+	router.HandlerFunc(http.MethodGet, pathWithVersion("/%s/economic/treasury_yield/:maturity"), app.treasuryYieldByYears)
 
 	return app.recoverPanic(app.enableCORS(app.rateLimit(router)))
 }

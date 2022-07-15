@@ -102,8 +102,10 @@ func main() {
 		logger:   logger,
 		services: NewAlphaServices(data.NewModels(db), alphaClient, logger),
 	}
+	//TODO - Uncomment
 	// Start the data sync tasks to keep data from the API up to date in the DB
 	//app.startDataSyncs()
+
 	// Serve the API
 	err = app.serve()
 	if err != nil {

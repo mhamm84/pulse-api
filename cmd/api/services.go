@@ -36,5 +36,5 @@ type AlphaVantageEconomicService interface {
 }
 
 type EconomicDashboardService interface {
-	GetDashboardSummary() (*[]data.SummaryHeader, error)
+	GetDashboardSummary() (*[]data.Summary, error)
 }

@@ -9,6 +9,7 @@ import (
 )
 
 type ReportType int8
+type TreasuryMaturity string
 
 const (
 	CPI ReportType = iota
@@ -39,6 +40,25 @@ func ReportTypeTreasuryYieldMaturity(maturity string) ReportType {
 		return TreasuryYieldThirtyYear
 	default:
 		return Unknown
+	}
+}
+
+func MaturityFromReportType(report ReportType) TreasuryMaturity {
+	switch report {
+	case TreasuryYieldThreeMonth:
+		return "3m"
+	case TreasuryYieldTwoYear:
+		return "2y"
+	case TreasuryYieldFiveYear:
+		return "5y"
+	case TreasuryYieldSevenYear:
+		return "7y"
+	case TreasuryYieldTenYear:
+		return "10y"
+	case TreasuryYieldThirtyYear:
+		return "30y"
+	default:
+		return "Unknown"
 	}
 }
 
