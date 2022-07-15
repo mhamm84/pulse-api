@@ -1,4 +1,4 @@
-package economic
+package data
 
 import (
 	"context"
@@ -111,14 +111,14 @@ func (r ReportType) ToTable() string {
 }
 
 type Economic struct {
-	Date  time.Time       `db:"time"`
-	Value decimal.Decimal `db:"value"`
+	Date  time.Time       `db:"time" json:"date"`
+	Value decimal.Decimal `db:"value" json:"value"`
 }
 
 type EconomicWithChange struct {
-	Date   time.Time        `db:"time"`
-	Value  decimal.Decimal  `db:"value"`
-	Change *decimal.Decimal `db:"percentage_change"`
+	Date   time.Time        `db:"time" json:"date"`
+	Value  decimal.Decimal  `db:"value" json:"value"`
+	Change *decimal.Decimal `db:"percentage_change" json:"change"`
 }
 
 type EconomicModel struct {
@@ -143,26 +143,51 @@ func (m *EconomicModel) LatestWithPercentChange(ctx context.Context, table strin
 	return &res, nil
 }
 
-func (m *EconomicModel) GetIntervalWithPercentChange(ctx context.Context, table string, years int) (*[]EconomicWithChange, error) {
+func (m *EconomicModel) GetIntervalWithPercentChange(ctx context.Context, table string, years int, paging Paging) (*[]EconomicWithChange, Metadata, error) {
 	res := []EconomicWithChange{}
 
 	yearsParam := fmt.Sprintf("'%d year'", years)
 
 	sql := fmt.Sprintf(`
 			SELECT
+				count(*) OVER(),
 		    	time,
 		    	value,
 		    	100.0 * (1 - LEAD(value) OVER (ORDER BY time desc) / value) AS percentage_change
 			FROM %s
 			WHERE time > current_date - INTERVAL %s
-			ORDER BY time DESC`, table, yearsParam)
+			ORDER BY time DESC
+			LIMIT $1 OFFSET $2`, table, yearsParam,
+	)
+	args := []interface{}{paging.limit(), paging.offset()}
 
-	err := m.DB.SelectContext(ctx, &res, sql)
+	rows, err := m.DB.QueryContext(ctx, sql, args...)
 	if err != nil {
-		fmt.Println(err)
-		return nil, err
+		return nil, Metadata{}, err
 	}
-	return &res, nil
+	defer rows.Close()
+
+	totalRecords := 0
+	for rows.Next() {
+		var economic EconomicWithChange
+
+		err := rows.Scan(
+			&totalRecords,
+			&economic.Date,
+			&economic.Value,
+			&economic.Change,
+		)
+		if err != nil {
+			return nil, Metadata{}, err
+		}
+		res = append(res, economic)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, Metadata{}, err
+	}
+	metadata := calculateMetadata(totalRecords, paging.Page, paging.PageSize)
+	return &res, metadata, nil
 }
 
 func (m *EconomicModel) GetAll(ctx context.Context, table string) (*[]Economic, error) {

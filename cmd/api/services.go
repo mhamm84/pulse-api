@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/mhamm84/gofinance-alpha/alpha"
 	"github.com/mhamm84/pulse-api/internal/data"
-	economic2 "github.com/mhamm84/pulse-api/internal/data/economic"
 	"github.com/mhamm84/pulse-api/internal/jsonlog"
 	"github.com/mhamm84/pulse-api/internal/services/economic"
 	"golang.org/x/time/rate"
@@ -31,11 +30,11 @@ func NewAlphaServices(models data.Models, client *alpha.Client, logger *jsonlog.
 }
 
 type AlphaVantageEconomicService interface {
-	GetAll(reportType economic2.ReportType) (*[]economic2.Economic, error)
-	GetIntervalWithPercentChange(reportType economic2.ReportType, years int) (*[]economic2.EconomicWithChange, error)
+	GetAll(reportType data.ReportType) (*[]data.Economic, error)
+	GetIntervalWithPercentChange(reportType data.ReportType, years int, paging data.Paging) (*[]data.EconomicWithChange, data.Metadata, error)
 	StartDataSyncTask()
 }
 
 type EconomicDashboardService interface {
-	GetDashboardSummary() (*[]economic2.SummaryHeader, error)
+	GetDashboardSummary() (*[]data.SummaryHeader, error)
 }

@@ -1,4 +1,4 @@
-package economic
+package data
 
 import (
 	"github.com/shopspring/decimal"
