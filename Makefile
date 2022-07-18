@@ -35,7 +35,8 @@ db/migrations/up: confirm
 ## audit: tidy dependencies and format, vet and test all code
 .PHONY: audit
 audit:
-	@echo 'Tidying and verifying module dependencies...' go mod tidy
+	@echo 'Tidying and verifying module dependencies...'
+	go mod tidy
 	go mod verify
 	@echo 'Formatting code...'
 	go fmt ./...
@@ -45,7 +46,7 @@ audit:
 	@echo 'Running tests...'
 	go test -race -vet=off ./...
 
-.PHONY: build/api
+.PHONY: api/build
 build/api:
 	@echo "Building pulse API..."
 	go build -o=./bin/api ./cmd/api/
