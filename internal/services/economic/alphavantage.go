@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/mhamm84/gofinance-alpha/alpha"
-	data2 "github.com/mhamm84/gofinance-alpha/alpha/data"
+	alphavantage "github.com/mhamm84/gofinance-alpha/alpha/data"
 	"github.com/mhamm84/pulse-api/internal/data"
 	"github.com/mhamm84/pulse-api/internal/jsonlog"
 	"github.com/mhamm84/pulse-api/internal/utils"
@@ -19,9 +19,11 @@ import (
 )
 
 const serviceTimeout = 10
+const dataSyncTimeout = 30
+const taskDelay = time.Duration(24 * time.Hour)
 
-type alphaEconomicCall func(opts *alpha.Options) (*data2.EconomicResponse, error)
-type getAllEconomic func(ctx context.Context, tableName string) (*[]data.Economic, error)
+type alphaEconomicCall func(ctx context.Context, opts *alpha.Options) (*alphavantage.EconomicResponse, error)
+type economicDataCall func(ctx context.Context, tableName string) (*[]data.Economic, error)
 
 type AlphaVantageEconomicResponse struct {
 	Name     string                     `json:"Name"`
@@ -99,31 +101,96 @@ func (s AlphaVantageEconomicService) GetAll(reportType data.ReportType) (*[]data
 	return data, nil
 }
 
+type DataSyncTaskParams struct {
+	s         *AlphaVantageEconomicService
+	opts      *alpha.Options
+	apiCall   alphaEconomicCall
+	tableName string
+	dataCall  economicDataCall
+	reportMap *map[string]data.Report
+}
+
 func (s AlphaVantageEconomicService) StartDataSyncTask() {
-	start(s, nil, s.Client.Cpi, data.TableFromReportType(data.CPI), s.Models.EconomicModel.GetAll)
-	start(s, nil, s.Client.ConsumerSentiment, data.TableFromReportType(data.ConsumerSentiment), s.Models.EconomicModel.GetAll)
-	addTreasuryYields(s)
-	start(s, nil, s.Client.RetailSales, data.TableFromReportType(data.RetailSales), s.Models.EconomicModel.GetAll)
+
+	ctx, cancel := context.WithTimeout(context.Background(), dataSyncTimeout*time.Second)
+	defer cancel()
+
+	reports, err := s.Models.EconomicModel.GetReports(ctx)
+	if err != nil {
+		s.Logger.PrintError(err, map[string]interface{}{
+			"message":  "Could not get economic report info data",
+			"service":  "AlphaVantageEconomicService",
+			"function": "StartDataSyncTask",
+		})
+		return
+	}
+	if reports == nil || len(*reports) == 0 {
+		s.Logger.PrintError(err, map[string]interface{}{
+			"message":  "No data found for economic report info data",
+			"service":  "AlphaVantageEconomicService",
+			"function": "StartDataSyncTask",
+		})
+		return
+	}
+
+	reportMap := map[string]data.Report{}
+	for _, v := range *reports {
+		reportMap[v.Slug] = v
+	}
+
+	start(DataSyncTaskParams{&s, nil, s.Client.Cpi, data.TableFromReportType(data.CPI), s.Models.EconomicModel.GetAll, &reportMap})
+	start(DataSyncTaskParams{&s, nil, s.Client.ConsumerSentiment, data.TableFromReportType(data.ConsumerSentiment), s.Models.EconomicModel.GetAll, &reportMap})
+	addTreasuryYields(&s, &reportMap)
+	start(DataSyncTaskParams{&s, nil, s.Client.RetailSales, data.TableFromReportType(data.RetailSales), s.Models.EconomicModel.GetAll, &reportMap})
 }
 
-func addTreasuryYields(s AlphaVantageEconomicService) {
+func addTreasuryYields(s *AlphaVantageEconomicService, reportMap *map[string]data.Report) {
 	threeMonthOptions := alpha.Options{Interval: alpha.Daily, Maturity: alpha.ThreeMonth}
-	start(s, &threeMonthOptions, s.Client.TreasuryYield, data.TableFromReportType(data.TreasuryYieldThreeMonth), s.Models.EconomicModel.GetAll)
+	start(DataSyncTaskParams{s, &threeMonthOptions, s.Client.TreasuryYield, data.TableFromReportType(data.TreasuryYieldThreeMonth), s.Models.EconomicModel.GetAll, reportMap})
 	twoYearOptions := alpha.Options{Interval: alpha.Daily, Maturity: alpha.TwoYear}
-	start(s, &twoYearOptions, s.Client.TreasuryYield, data.TableFromReportType(data.TreasuryYieldTwoYear), s.Models.EconomicModel.GetAll)
+	start(DataSyncTaskParams{s, &twoYearOptions, s.Client.TreasuryYield, data.TableFromReportType(data.TreasuryYieldTwoYear), s.Models.EconomicModel.GetAll, reportMap})
 	fiveYearOptions := alpha.Options{Interval: alpha.Daily, Maturity: alpha.FiveYear}
-	start(s, &fiveYearOptions, s.Client.TreasuryYield, data.TableFromReportType(data.TreasuryYieldFiveYear), s.Models.EconomicModel.GetAll)
+	start(DataSyncTaskParams{s, &fiveYearOptions, s.Client.TreasuryYield, data.TableFromReportType(data.TreasuryYieldFiveYear), s.Models.EconomicModel.GetAll, reportMap})
 	sevenYearOptions := alpha.Options{Interval: alpha.Daily, Maturity: alpha.SevenYear}
-	start(s, &sevenYearOptions, s.Client.TreasuryYield, data.TableFromReportType(data.TreasuryYieldSevenYear), s.Models.EconomicModel.GetAll)
+	start(DataSyncTaskParams{s, &sevenYearOptions, s.Client.TreasuryYield, data.TableFromReportType(data.TreasuryYieldSevenYear), s.Models.EconomicModel.GetAll, reportMap})
 	tenYearOptions := alpha.Options{Interval: alpha.Daily, Maturity: alpha.TenYear}
-	start(s, &tenYearOptions, s.Client.TreasuryYield, data.TableFromReportType(data.TreasuryYieldTenYear), s.Models.EconomicModel.GetAll)
+	start(DataSyncTaskParams{s, &tenYearOptions, s.Client.TreasuryYield, data.TableFromReportType(data.TreasuryYieldTenYear), s.Models.EconomicModel.GetAll, reportMap})
 	thirtyYearOptions := alpha.Options{Interval: alpha.Daily, Maturity: alpha.ThirtyYear}
-	start(s, &thirtyYearOptions, s.Client.TreasuryYield, data.TableFromReportType(data.TreasuryYieldThirtyYear), s.Models.EconomicModel.GetAll)
+	start(DataSyncTaskParams{s, &thirtyYearOptions, s.Client.TreasuryYield, data.TableFromReportType(data.TreasuryYieldThirtyYear), s.Models.EconomicModel.GetAll, reportMap})
 }
 
-func start(s AlphaVantageEconomicService, opts *alpha.Options, apiCall alphaEconomicCall, tableName string, getAll getAllEconomic) {
-	tr := utils.NewScheduleTaskRunner(5*time.Second, 24*time.Hour, s.Logger)
+func start(taskParams DataSyncTaskParams) {
+
+	s := taskParams.s
+	tableName := taskParams.tableName
+	opts := taskParams.opts
+	apiCall := taskParams.apiCall
+	reportMap := *taskParams.reportMap
+
+	report := reportMap[tableName]
+	reportDelay := report.InitialSyncDelayMinutes
+
+	var initialDelayDuration time.Duration
+	if reportDelay == 0 {
+		initialDelayDuration = 5 * time.Second
+	} else {
+		initialDelayDuration = time.Duration(reportDelay) * time.Minute
+	}
+	tr := utils.NewScheduleTaskRunner(initialDelayDuration, 24*time.Hour, s.Logger)
+	taskParams.s.Logger.PrintInfo("Created new ScheduleTaskRunner", map[string]interface{}{
+		"report":               tableName,
+		"initialDelayDuration": initialDelayDuration.String(),
+		"taskDelay":            taskDelay.String(),
+	})
 	tr.Start(func() {
+
+		if time.Since(reportMap[tableName].LastPullDate) < (time.Hour * 24) {
+			s.Logger.PrintInfo("Skipping data sync, less than 24 hours since last one", map[string]interface{}{
+				"data": tableName,
+			})
+			return
+		}
+
 		s.Logger.PrintInfo("StartDataSyncTask", map[string]interface{}{
 			"data": tableName,
 		})
@@ -131,7 +198,7 @@ func start(s AlphaVantageEconomicService, opts *alpha.Options, apiCall alphaEcon
 		ctx, cancel := context.WithTimeout(context.Background(), serviceTimeout*time.Second)
 		defer cancel()
 
-		data, err := getAll(ctx, tableName)
+		data, err := taskParams.dataCall(ctx, taskParams.tableName)
 		if err != nil {
 			s.Logger.PrintError(err, nil)
 			return
@@ -141,7 +208,7 @@ func start(s AlphaVantageEconomicService, opts *alpha.Options, apiCall alphaEcon
 			s.Logger.PrintInfo(fmt.Sprintf("no data found in DB for %s, getting from API", tableName), map[string]interface{}{
 				"task": "StartDataSyncTask",
 			})
-			apiData := processApiCall(s, opts, apiCall, tableName)
+			apiData := processApiCall(ctx, s, opts, apiCall, tableName)
 			if apiData == nil {
 				return
 			}
@@ -161,7 +228,7 @@ func start(s AlphaVantageEconomicService, opts *alpha.Options, apiCall alphaEcon
 			s.Logger.PrintInfo(fmt.Sprintf("existing %s data in DB, checking API for updates", tableName), map[string]interface{}{
 				"task": "StartDataSyncTask",
 			})
-			apiData := processApiCall(s, opts, apiCall, tableName)
+			apiData := processApiCall(ctx, s, opts, apiCall, tableName)
 
 			if apiData != nil {
 				s.insertNewData(ctx, tableName, apiData, data)
@@ -170,8 +237,8 @@ func start(s AlphaVantageEconomicService, opts *alpha.Options, apiCall alphaEcon
 	})
 }
 
-func processApiCall(s AlphaVantageEconomicService, opts *alpha.Options, apiCall alphaEconomicCall, tableName string) *[]data.Economic {
-	apiData, err := s.getDataFromApi(opts, apiCall)
+func processApiCall(ctx context.Context, s *AlphaVantageEconomicService, opts *alpha.Options, apiCall alphaEconomicCall, tableName string) *[]data.Economic {
+	apiData, err := s.getDataFromApi(ctx, opts, apiCall)
 	if err != nil {
 		s.Logger.PrintWarning("error getting data from Alpha Vantage API", map[string]interface{}{
 			"tableName": tableName,
@@ -180,10 +247,17 @@ func processApiCall(s AlphaVantageEconomicService, opts *alpha.Options, apiCall 
 		return nil
 	}
 	if apiData == nil || len(*apiData) == 0 {
-		s.Logger.PrintWarning("Alpha Vantage API call returned empty", map[string]interface{}{
+		s.Logger.PrintWarning("alpha Vantage API call returned empty", map[string]interface{}{
 			"data to extract": tableName,
 		})
 		return nil
+	}
+	err = s.Models.EconomicModel.UpdateReportLastPullDate(ctx, tableName)
+	if err != nil {
+		s.Logger.PrintWarning("error updating last data pull date on report", map[string]interface{}{
+			"report": tableName,
+			"error":  err.Error(),
+		})
 	}
 	return apiData
 }
@@ -214,7 +288,7 @@ func (s AlphaVantageEconomicService) insertNewData(
 	return nil
 }
 
-func (s AlphaVantageEconomicService) getDataFromApi(opts *alpha.Options, apiCall alphaEconomicCall) (*[]data.Economic, error) {
+func (s AlphaVantageEconomicService) getDataFromApi(ctx context.Context, opts *alpha.Options, apiCall alphaEconomicCall) (*[]data.Economic, error) {
 	// Check the API limits
 	if !s.Limiter.DailyLimiter.Allow() {
 		return nil, errors.New("hit daily limit when calling Alpha Advantage")
@@ -223,7 +297,7 @@ func (s AlphaVantageEconomicService) getDataFromApi(opts *alpha.Options, apiCall
 		return nil, errors.New("hit minute limit when calling Alpha Advantage")
 	}
 
-	apiRes, err := apiCall(opts)
+	apiRes, err := apiCall(ctx, opts)
 	if err != nil {
 		s.Logger.PrintError(err, nil)
 	}
@@ -237,10 +311,10 @@ func (s AlphaVantageEconomicService) getDataFromApi(opts *alpha.Options, apiCall
 	}
 	return &data, nil
 }
-func (s AlphaVantageEconomicService) transform(apiData *data2.EconomicValue) *data.Economic {
+func (s AlphaVantageEconomicService) transform(apiData *alphavantage.EconomicValue) *data.Economic {
 	date, err := time.Parse("2006-01-02", apiData.Date)
 	if err != nil {
-		s.Logger.PrintError(err, map[string]interface{}{"AlphaVantage Date": apiData.Date})
+		s.Logger.PrintError(err, map[string]interface{}{"alpha vantage Date": apiData.Date})
 	}
 	if _, err := strconv.ParseFloat(apiData.Value, 64); err != nil {
 		s.Logger.PrintDebug("cannot parse this value: "+apiData.Value, nil)
@@ -248,7 +322,7 @@ func (s AlphaVantageEconomicService) transform(apiData *data2.EconomicValue) *da
 	}
 	value, err := decimal.NewFromString(strings.TrimSpace(apiData.Value))
 	if err != nil {
-		s.Logger.PrintError(err, map[string]interface{}{"AlphaVantage Value": apiData.Value})
+		s.Logger.PrintError(err, map[string]interface{}{"alpha vantage Value": apiData.Value})
 	}
 	return &data.Economic{
 		Date:  date,

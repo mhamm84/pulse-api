@@ -104,7 +104,7 @@ func main() {
 	}
 	//TODO - Uncomment
 	// Start the data sync tasks to keep data from the API up to date in the DB
-	//app.startDataSyncs()
+	app.startEconomicReportDataSync()
 
 	// Serve the API
 	err = app.serve()

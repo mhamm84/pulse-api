@@ -2,11 +2,96 @@ package data
 
 import (
 	"context"
+	"database/sql/driver"
+	"encoding/json"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
 	"time"
 )
+
+type Report struct {
+	Id                      int64     `db:"id" json:"id"`
+	Slug                    string    `db:"slug" json:"slug"`
+	DisplayName             string    `db:"display_name" json:"displayName"`
+	Description             string    `db:"description" json:"description"`
+	Image                   string    `db:"image" json:"image"`
+	LastPullDate            time.Time `db:"last_data_pull" json:"lastPullDate"`
+	InitialSyncDelayMinutes int       `db:"initial_sync_delay_minutes" json:"initialSyncDelayMinutes"`
+	Extras                  Extras    `json:"extras"`
+}
+
+type Extras map[string]interface{}
+
+func (e Extras) Value() (driver.Value, error) {
+	return json.Marshal(e)
+}
+
+func (e *Extras) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	return json.Unmarshal(b, &e)
+}
+
+func (m *EconomicModel) GetAllReports(ctx context.Context) ([]*Report, error) {
+	reports := []*Report{}
+	query := `
+		SELECT 
+		    slug, display_name, description, image, last_data_pull, initial_sync_delay_minutes, extras 
+		FROM economic_report`
+
+	err := m.DB.SelectContext(ctx, &reports, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return reports, nil
+}
+
+func (m *EconomicModel) UpdateReportLastPullDate(ctx context.Context, slug string) error {
+	query := `UPDATE economic_report SET last_data_pull = NOW() WHERE slug = $1`
+
+	_, err := m.DB.ExecContext(ctx, query, slug)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *EconomicModel) GetReportBySlug(ctx context.Context, slug string) (*Report, error) {
+	report := Report{}
+	query := `
+		SELECT 
+			slug, display_name, description, image, last_data_pull, initial_sync_delay_minutes, extras 
+		FROM economic_report
+		WHERE slug = $1`
+
+	err := m.DB.GetContext(ctx, &report, query, slug)
+	if err != nil {
+		return nil, err
+	}
+	return &report, nil
+}
+
+func (m *EconomicModel) GetReports(ctx context.Context) (*[]Report, error) {
+	reports := []Report{}
+	query := `
+		SELECT 
+			slug, display_name, description, image, last_data_pull, initial_sync_delay_minutes, extras 
+		FROM economic_report`
+
+	err := m.DB.SelectContext(ctx, &reports, query)
+	if err != nil {
+		return nil, err
+	}
+	return &reports, nil
+}
 
 type ReportType int8
 type TreasuryMaturity string
@@ -156,7 +241,7 @@ func (m *EconomicModel) LatestWithPercentChange(ctx context.Context, table strin
 			ORDER BY time DESC
 			LIMIT 1`, table)
 
-	err := m.DB.GetContext(ctx, &res, sql)
+	err := m.DB.GetContext(ctx, &res, sql, table)
 	if err != nil {
 		return nil, err
 	}

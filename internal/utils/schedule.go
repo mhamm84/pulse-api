@@ -32,7 +32,7 @@ func (tr *ScheduleTaskRunner) Start(task func()) error {
 	go func() {
 		defer func() {
 			tr.stopTheClock()
-			tr.logger.PrintInfo("ScheduleTaskRunner stopped", nil)
+			tr.logger.PrintDebug("ScheduleTaskRunner stopped", nil)
 		}()
 		firstEx := true
 		for {
@@ -43,7 +43,7 @@ func (tr *ScheduleTaskRunner) Start(task func()) error {
 					tr.ticker = *time.NewTicker(tr.delay)
 					firstEx = false
 				}
-				tr.logger.PrintInfo("ScheduleTaskRunner running task", nil)
+				tr.logger.PrintDebug("ScheduleTaskRunner running task", nil)
 				go task()
 				break
 

@@ -1,5 +1,6 @@
 package main
 
-func (app *application) startDataSyncs() {
+func (app *application) startEconomicReportDataSync() {
+
 	app.services.alphaVantageEconomicService.StartDataSyncTask()
 }
