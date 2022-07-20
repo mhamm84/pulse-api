@@ -1,4 +1,4 @@
-package economic
+package alpha
 
 import (
 	"encoding/json"

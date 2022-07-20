@@ -4,8 +4,6 @@ import (
 	"context"
 	"database/sql/driver"
 	"encoding/json"
-	"fmt"
-	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
 	"time"
@@ -37,60 +35,6 @@ func (e *Extras) Scan(value interface{}) error {
 		return errors.New("type assertion to []byte failed")
 	}
 	return json.Unmarshal(b, &e)
-}
-
-func (m *EconomicModel) GetAllReports(ctx context.Context) ([]*Report, error) {
-	reports := []*Report{}
-	query := `
-		SELECT 
-		    slug, display_name, description, image, last_data_pull, initial_sync_delay_minutes, extras 
-		FROM economic_report`
-
-	err := m.DB.SelectContext(ctx, &reports, query)
-	if err != nil {
-		return nil, err
-	}
-
-	return reports, nil
-}
-
-func (m *EconomicModel) UpdateReportLastPullDate(ctx context.Context, slug string) error {
-	query := `UPDATE economic_report SET last_data_pull = NOW() WHERE slug = $1`
-
-	_, err := m.DB.ExecContext(ctx, query, slug)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (m *EconomicModel) GetReportBySlug(ctx context.Context, slug string) (*Report, error) {
-	report := Report{}
-	query := `
-		SELECT 
-			slug, display_name, description, image, last_data_pull, initial_sync_delay_minutes, extras 
-		FROM economic_report
-		WHERE slug = $1`
-
-	err := m.DB.GetContext(ctx, &report, query, slug)
-	if err != nil {
-		return nil, err
-	}
-	return &report, nil
-}
-
-func (m *EconomicModel) GetReports(ctx context.Context) (*[]Report, error) {
-	reports := []Report{}
-	query := `
-		SELECT 
-			slug, display_name, description, image, last_data_pull, initial_sync_delay_minutes, extras 
-		FROM economic_report`
-
-	err := m.DB.SelectContext(ctx, &reports, query)
-	if err != nil {
-		return nil, err
-	}
-	return &reports, nil
 }
 
 type ReportType int8
@@ -221,96 +165,22 @@ type Economic struct {
 }
 
 type EconomicWithChange struct {
-	Date   time.Time        `db:"time" json:"date"`
-	Value  decimal.Decimal  `db:"value" json:"value"`
-	Change *decimal.Decimal `db:"percentage_change" json:"change"`
+	Date   time.Time       `db:"time" json:"date"`
+	Value  decimal.Decimal `db:"value" json:"value"`
+	Change decimal.Decimal `db:"percentage_change" json:"change"`
 }
 
-type EconomicModel struct {
-	DB *sqlx.DB
+type EconomicRepository interface {
+	LatestWithPercentChange(ctx context.Context, table string) (*EconomicWithChange, error)
+	GetIntervalWithPercentChange(ctx context.Context, table string, years int, paging Paging) (*[]EconomicWithChange, Metadata, error)
+	GetAll(ctx context.Context, table string) (*[]Economic, error)
+	Insert(ctx context.Context, table string, data *Economic) error
+	InsertMany(ctx context.Context, table string, data *[]Economic) error
 }
 
-func (m *EconomicModel) LatestWithPercentChange(ctx context.Context, table string) (*EconomicWithChange, error) {
-	res := EconomicWithChange{}
-	sql := fmt.Sprintf(`
-			SELECT
-		    	time,
-		    	value,
-		    	100.0 * (1 - LEAD(value) OVER (ORDER BY time desc) / value) AS percentage_change
-			FROM %s
-			ORDER BY time DESC
-			LIMIT 1`, table)
-
-	err := m.DB.GetContext(ctx, &res, sql, table)
-	if err != nil {
-		return nil, err
-	}
-	return &res, nil
-}
-
-func (m *EconomicModel) GetIntervalWithPercentChange(ctx context.Context, table string, years int, paging Paging) (*[]EconomicWithChange, Metadata, error) {
-	res := []EconomicWithChange{}
-
-	yearsParam := fmt.Sprintf("'%d year'", years)
-
-	sql := fmt.Sprintf(`
-			SELECT
-				count(*) OVER(),
-		    	time,
-		    	value,
-		    	100.0 * (1 - LEAD(value) OVER (ORDER BY time desc) / value) AS percentage_change
-			FROM %s
-			WHERE time > current_date - INTERVAL %s
-			ORDER BY time DESC
-			LIMIT $1 OFFSET $2`, table, yearsParam,
-	)
-	args := []interface{}{paging.limit(), paging.offset()}
-
-	rows, err := m.DB.QueryContext(ctx, sql, args...)
-	if err != nil {
-		return nil, Metadata{}, err
-	}
-	defer rows.Close()
-
-	totalRecords := 0
-	for rows.Next() {
-		var economic EconomicWithChange
-
-		err := rows.Scan(
-			&totalRecords,
-			&economic.Date,
-			&economic.Value,
-			&economic.Change,
-		)
-		if err != nil {
-			return nil, Metadata{}, err
-		}
-		res = append(res, economic)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, Metadata{}, err
-	}
-	metadata := calculateMetadata(totalRecords, paging.Page, paging.PageSize)
-	return &res, metadata, nil
-}
-
-func (m *EconomicModel) GetAll(ctx context.Context, table string) (*[]Economic, error) {
-	data := []Economic{}
-	err := m.DB.SelectContext(ctx, &data, fmt.Sprintf(`SELECT * FROM %s ORDER BY time DESC`, table))
-	return &data, err
-}
-
-func (m *EconomicModel) Insert(ctx context.Context, table string, data *Economic) error {
-	tx := m.DB.MustBeginTx(ctx, nil)
-	_, err := tx.NamedExecContext(ctx, fmt.Sprintf(`INSERT INTO %s (time, value) VALUES (:time, :value)`, table), *data)
-	tx.Commit()
-	return err
-}
-
-func (m *EconomicModel) InsertMany(ctx context.Context, table string, data *[]Economic) error {
-	tx := m.DB.MustBeginTx(ctx, nil)
-	_, err := tx.NamedExec(fmt.Sprintf(`INSERT INTO %s (time, value) VALUES (:time, :value)`, table), *data)
-	tx.Commit()
-	return err
+type ReportRepository interface {
+	GetAllReports(ctx context.Context) ([]*Report, error)
+	UpdateReportLastPullDate(ctx context.Context, slug string) error
+	GetReportBySlug(ctx context.Context, slug string) (*Report, error)
+	GetReports(ctx context.Context) (*[]Report, error)
 }

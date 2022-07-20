@@ -10,11 +10,11 @@ type Paging struct {
 	PageSize int
 }
 
-func (p *Paging) limit() int {
+func (p *Paging) Limit() int {
 	return p.PageSize
 }
 
-func (p *Paging) offset() int {
+func (p *Paging) Offset() int {
 	return (p.Page - 1) * p.PageSize
 }
 
@@ -33,7 +33,7 @@ type Metadata struct {
 	TotalRecords int `json:"total_records"`
 }
 
-func calculateMetadata(totalRecords, page, pageSize int) Metadata {
+func CalculateMetadata(totalRecords, page, pageSize int) Metadata {
 	if totalRecords == 0 {
 
 		return Metadata{}

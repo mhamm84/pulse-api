@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"github.com/common-nighthawk/go-figure"
 	"github.com/mhamm84/gofinance-alpha/alpha"
-	"github.com/mhamm84/pulse-api/internal/data"
 	"github.com/mhamm84/pulse-api/internal/jsonlog"
+	"github.com/mhamm84/pulse-api/internal/repo"
 	"os"
 	"strings"
 	"time"
@@ -100,7 +100,7 @@ func main() {
 	app := application{
 		cfg:      cfg,
 		logger:   logger,
-		services: NewAlphaServices(data.NewModels(db), alphaClient, logger),
+		services: NewAlphaServices(repo.NewModels(db), alphaClient, logger),
 	}
 	//TODO - Uncomment
 	// Start the data sync tasks to keep data from the API up to date in the DB
