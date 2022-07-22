@@ -14,7 +14,7 @@ import (
 func (app *application) serve() error {
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", app.cfg.port),
-		Handler:      app.routes(),
+		Handler:      http.TimeoutHandler(app.routes(), 5*time.Second, "timeout limit of request reached"),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,

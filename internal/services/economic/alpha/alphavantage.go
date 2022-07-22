@@ -85,15 +85,13 @@ type AlphaVantageLimiter struct {
 	DailyLimiter  *rate.Limiter
 }
 
-func (s AlphaVantageEconomicService) GetIntervalWithPercentChange(reportType data.ReportType, years int, paging data.Paging) (*[]data.EconomicWithChange, data.Metadata, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), serviceTimeout*time.Second)
-	defer cancel()
-
-	data, meta, err := s.EconomicRepository.GetIntervalWithPercentChange(ctx, data.TableFromReportType(reportType), years, paging)
+func (s AlphaVantageEconomicService) GetIntervalWithPercentChange(ctx context.Context, dataChan chan data.EconomicWithChangeResult, errChan chan error, reportType data.ReportType, years int, paging data.Paging) {
+	data, err := s.EconomicRepository.GetIntervalWithPercentChange(ctx, data.TableFromReportType(reportType), years, paging)
 	if err != nil {
-		return nil, meta, err
+		errChan <- err
+	} else {
+		dataChan <- *data
 	}
-	return data, meta, nil
 }
 
 // GetAll Gets all the data for an economic table

@@ -26,14 +26,19 @@ func (p *economicPG) LatestWithPercentChange(ctx context.Context, table string) 
 			ORDER BY time DESC
 			LIMIT 1`, table)
 
-	err := p.db.GetContext(ctx, &res, sql, table)
+	err := p.db.GetContext(ctx, &res, sql)
 	if err != nil {
 		return nil, err
 	}
 	return &res, nil
 }
 
-func (p *economicPG) GetIntervalWithPercentChange(ctx context.Context, table string, years int, paging data.Paging) (*[]data.EconomicWithChange, data.Metadata, error) {
+func (p *economicPG) GetIntervalWithPercentChange(ctx context.Context, table string, years int, paging data.Paging) (*data.EconomicWithChangeResult, error) {
+	select {
+	default:
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
 	res := []data.EconomicWithChange{}
 
 	yearsParam := fmt.Sprintf("'%d year'", years)
@@ -53,7 +58,7 @@ func (p *economicPG) GetIntervalWithPercentChange(ctx context.Context, table str
 
 	rows, err := p.db.QueryContext(ctx, sql, args...)
 	if err != nil {
-		return nil, data.Metadata{}, err
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -67,15 +72,16 @@ func (p *economicPG) GetIntervalWithPercentChange(ctx context.Context, table str
 			&economic.Change,
 		)
 		if err != nil {
-			return nil, data.Metadata{}, err
+			return nil, err
 		}
 		res = append(res, economic)
 	}
 	if err = rows.Err(); err != nil {
-		return nil, data.Metadata{}, err
+		return nil, err
 	}
 	metadata := data.CalculateMetadata(totalRecords, paging.Page, paging.PageSize)
-	return &res, metadata, nil
+
+	return &data.EconomicWithChangeResult{Data: &res, Meta: &metadata}, nil
 }
 
 func (p *economicPG) GetAll(ctx context.Context, table string) (*[]data.Economic, error) {

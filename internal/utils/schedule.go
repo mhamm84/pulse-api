@@ -45,14 +45,12 @@ func (tr *ScheduleTaskRunner) Start(task func()) error {
 				}
 				tr.logger.PrintDebug("ScheduleTaskRunner running task", nil)
 				go task()
-				break
 
 			case <-tr.quit:
 				return
 
 			case <-sig:
 				tr.Close()
-				break
 			}
 		}
 	}()

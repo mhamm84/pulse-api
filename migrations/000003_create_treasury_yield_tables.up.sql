@@ -2,7 +2,7 @@
 -- treasury_yield
 -- ####################################################################################################
 CREATE TABLE IF NOT EXISTS treasury_yield_three_month (
-    time TIMESTAMP WITH TIME ZONE NOT NULL,
+    time TIMESTAMP WITH TIME ZONE NOT NULL PRIMARY KEY,
     value DOUBLE PRECISION NOT NULL
 );
 

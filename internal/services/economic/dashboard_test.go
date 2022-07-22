@@ -25,8 +25,8 @@ func (w *MockEconomicRepository) LatestWithPercentChange(ctx context.Context, ta
 	return args.Get(0).(*data.EconomicWithChange), args.Error(1)
 }
 
-func (w *MockEconomicRepository) GetIntervalWithPercentChange(ctx context.Context, table string, years int, paging data.Paging) (*[]data.EconomicWithChange, data.Metadata, error) {
-	return nil, data.Metadata{}, nil
+func (w *MockEconomicRepository) GetIntervalWithPercentChange(ctx context.Context, table string, years int, paging data.Paging) (*data.EconomicWithChangeResult, error) {
+	return nil, nil
 }
 func (w *MockEconomicRepository) GetAll(ctx context.Context, table string) (*[]data.Economic, error) {
 	return nil, nil

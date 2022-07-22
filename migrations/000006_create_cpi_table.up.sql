@@ -2,7 +2,7 @@
 -- cpi
 -- ####################################################################################################
 CREATE TABLE IF NOT EXISTS cpi (
-    time TIMESTAMP WITH TIME ZONE NOT NULL,
+    time TIMESTAMP WITH TIME ZONE NOT NULL PRIMARY KEY,
     value DOUBLE PRECISION NOT NULL
 );
 

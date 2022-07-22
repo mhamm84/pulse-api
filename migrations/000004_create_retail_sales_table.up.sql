@@ -2,7 +2,7 @@
 -- retail_sales
 -- ####################################################################################################
 CREATE TABLE IF NOT EXISTS retail_sales (
-    time TIMESTAMP WITH TIME ZONE NOT NULL,
+    time TIMESTAMP WITH TIME ZONE NOT NULL PRIMARY KEY,
     value DOUBLE PRECISION NOT NULL
 );
 

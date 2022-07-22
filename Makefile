@@ -43,11 +43,31 @@ audit:
 	@echo 'Vetting code...'
 	go vet ./...
 	staticcheck ./...
-	@echo 'Running tests...'
-	go test -race -vet=off ./...
 
 .PHONY: api/build
 build/api:
 	@echo "Building pulse API..."
 	go build -o=./bin/api ./cmd/api/
 	GOOS=linux GOARCH=amd64 go build -o=./bin/linux_amd64/api ./cmd/api/
+
+.PHONY: integration-docker-up
+integration-docker-up:
+	@echo 'Spinning up docker for integration tests'
+	cd docker/integration ; \
+		docker-compose up -d
+
+.PHONY: integration-tests
+integration-tests: audit integration-docker-up
+	@echo 'Running tests...'
+	go test -tags=integration -race ./...
+
+.PHONY: integration-docker-down
+integration-docker-down:
+	@echo 'Spinning up docker for integration tests'
+	cd ./docker/integration ; \
+		docker-compose down
+
+.PHONY: unit-tests
+unit-tests: audit
+	@echo 'Running unit tests...'
+	go test -race ./...

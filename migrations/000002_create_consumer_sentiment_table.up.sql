@@ -2,7 +2,7 @@
 -- consumer_sentiment
 -- ####################################################################################################
 CREATE TABLE IF NOT EXISTS consumer_sentiment (
-    time TIMESTAMP WITH TIME ZONE NOT NULL,
+    time TIMESTAMP WITH TIME ZONE NOT NULL PRIMARY KEY,
     value DOUBLE PRECISION NOT NULL
 );
 

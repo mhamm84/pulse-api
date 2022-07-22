@@ -10,7 +10,7 @@ services:
   # timescale
   ####################################################################################
   database:
-    # Official Postgres image from DockerHub (we use the last version)
+    container_name: pulse-timescale-db
     image: 'timescale/timescaledb-ha:pg14-latest'
     # By default, a Postgres database is running on the 5432 port.
     # If we want to access the database from our computer (outside the container),
@@ -31,6 +31,7 @@ services:
   # pgadmin
   ####################################################################################
   pgadmin:
+    container_name: pulse-pgadmin4
     image: dpage/pgadmin4:6.10
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@pgadmin.com

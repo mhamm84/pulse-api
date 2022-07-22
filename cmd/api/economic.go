@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"github.com/mhamm84/pulse-api/internal/data"
@@ -10,15 +11,15 @@ import (
 )
 
 func (app *application) cpiDataByYears(w http.ResponseWriter, r *http.Request) {
-	getEconomicDataByYears(app, data.CPI, w, r)
+	getEconomicDataByYears(r.Context(), app, data.CPI, w, r)
 }
 
 func (app *application) consumerSentimentDataByYears(w http.ResponseWriter, r *http.Request) {
-	getEconomicDataByYears(app, data.ConsumerSentiment, w, r)
+	getEconomicDataByYears(r.Context(), app, data.ConsumerSentiment, w, r)
 }
 
 func (app *application) retailSalesDataByYears(w http.ResponseWriter, r *http.Request) {
-	getEconomicDataByYears(app, data.RetailSales, w, r)
+	getEconomicDataByYears(r.Context(), app, data.RetailSales, w, r)
 }
 
 func (app *application) treasuryYieldByYears(w http.ResponseWriter, r *http.Request) {
@@ -33,10 +34,10 @@ func (app *application) treasuryYieldByYears(w http.ResponseWriter, r *http.Requ
 		app.badRequestHandler(w, r)
 		return
 	}
-	getEconomicDataByYears(app, reportType, w, r)
+	getEconomicDataByYears(r.Context(), app, reportType, w, r)
 }
 
-func getEconomicDataByYears(app *application, report data.ReportType, w http.ResponseWriter, r *http.Request) {
+func getEconomicDataByYears(ctx context.Context, app *application, report data.ReportType, w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Years  int
 		Paging data.Paging
@@ -60,20 +61,30 @@ func getEconomicDataByYears(app *application, report data.ReportType, w http.Res
 		app.failedValidationResponse(w, r, v.Errors)
 	}
 
-	data, meta, err := app.services.alphaVantageEconomicService.GetIntervalWithPercentChange(report, years, input.Paging)
-	if err != nil {
+	dataChan := make(chan data.EconomicWithChangeResult)
+	errChan := make(chan error)
+
+	go app.services.alphaVantageEconomicService.GetIntervalWithPercentChange(r.Context(), dataChan, errChan, report, years, input.Paging)
+
+	select {
+	case data := <-dataChan:
+		err := app.WriteJson(w, http.StatusOK, envelope{
+			"data": data.Data,
+			"meta": data.Meta,
+		}, nil)
+
+		if err != nil {
+			app.logger.PrintError(err, nil)
+			app.serverErrorResponse(w, r, err)
+		}
+		return
+	case err := <-errChan:
 		app.logger.PrintError(err, nil)
 		app.serverErrorResponse(w, r, err)
 		return
-	}
-
-	err = app.WriteJson(w, http.StatusOK, envelope{
-		"data": data,
-		"meta": meta,
-	}, nil)
-
-	if err != nil {
-		app.logger.PrintError(err, nil)
-		app.serverErrorResponse(w, r, err)
+	case <-ctx.Done():
+		app.logger.PrintError(ctx.Err(), nil)
+		app.serverErrorResponse(w, r, ctx.Err())
+		return
 	}
 }

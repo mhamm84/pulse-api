@@ -42,3 +42,4 @@
 /docker/.env
 /.envrc
 /bin/
+/testing/integration/economic/data/main/sql/

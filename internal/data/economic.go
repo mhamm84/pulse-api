@@ -170,9 +170,14 @@ type EconomicWithChange struct {
 	Change decimal.Decimal `db:"percentage_change" json:"change"`
 }
 
+type EconomicWithChangeResult struct {
+	Data *[]EconomicWithChange
+	Meta *Metadata
+}
+
 type EconomicRepository interface {
 	LatestWithPercentChange(ctx context.Context, table string) (*EconomicWithChange, error)
-	GetIntervalWithPercentChange(ctx context.Context, table string, years int, paging Paging) (*[]EconomicWithChange, Metadata, error)
+	GetIntervalWithPercentChange(ctx context.Context, table string, years int, paging Paging) (*EconomicWithChangeResult, error)
 	GetAll(ctx context.Context, table string) (*[]Economic, error)
 	Insert(ctx context.Context, table string, data *Economic) error
 	InsertMany(ctx context.Context, table string, data *[]Economic) error

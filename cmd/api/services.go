@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/mhamm84/pulse-api/internal/data"
 	"github.com/mhamm84/pulse-api/internal/jsonlog"
 	"github.com/mhamm84/pulse-api/internal/repo"
@@ -33,7 +34,7 @@ func NewAlphaServices(models repo.Models, client alpha.ClientInterface, logger *
 
 type EconomicService interface {
 	GetAll(reportType data.ReportType) (*[]data.Economic, error)
-	GetIntervalWithPercentChange(reportType data.ReportType, years int, paging data.Paging) (*[]data.EconomicWithChange, data.Metadata, error)
+	GetIntervalWithPercentChange(ctx context.Context, dataChan chan data.EconomicWithChangeResult, errChan chan error, reportType data.ReportType, years int, paging data.Paging)
 	StartDataSyncTask()
 }
 
