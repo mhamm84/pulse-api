@@ -59,7 +59,7 @@ integration-docker-up:
 .PHONY: integration-tests
 integration-tests: audit integration-docker-up
 	@echo 'Running tests...'
-	go test -tags=integration -race ./...
+	go test -v -tags=integration -race ./...
 
 .PHONY: integration-docker-down
 integration-docker-down:
@@ -70,4 +70,4 @@ integration-docker-down:
 .PHONY: unit-tests
 unit-tests: audit
 	@echo 'Running unit tests...'
-	go test -race ./...
+	go test -v -race ./...
