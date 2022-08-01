@@ -8,7 +8,9 @@ import (
 	"github.com/mhamm84/gofinance-alpha/alpha"
 	"github.com/mhamm84/pulse-api/internal/jsonlog"
 	"github.com/mhamm84/pulse-api/internal/repo"
+	"github.com/mhamm84/pulse-api/internal/utils"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -46,6 +48,7 @@ type config struct {
 	cors struct {
 		trustedOrigins []string
 	}
+	dataSync bool
 	logLevel string
 }
 
@@ -59,11 +62,11 @@ func main() {
 	// Parse arguments passed in on startup
 	var cfg config
 
-	flag.StringVar(&cfg.logLevel, "log-level", "INFO", "logging level")
+	flag.StringVar(&cfg.logLevel, "log-level", os.Getenv("PULSE_LOG_LEVEL"), "logging level")
 	flag.IntVar(&cfg.port, "port", 9091, "Pulse API port number")
 	flag.StringVar(&cfg.env, "env", dev, fmt.Sprintf("%s|%s|%s|%s", dev, staging, uat, production))
 	// DB jdbc:postgresql://localhost:5432/pulse
-	flag.StringVar(&cfg.db.dsn, "db-dsn", "db-dsn", "Postgres DSN")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("PULSE_POSTGRES_DSN"), "Postgres DSN")
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
 	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
 	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
@@ -75,18 +78,31 @@ func main() {
 	flag.IntVar(&cfg.limiter.burst, "limiter-burst", 4, "Rate limiter maximum burst")
 	flag.BoolVar(&cfg.limiter.enabled, "limiter-enabled", true, "Enable rate limiter")
 	// CORS
-	flag.Func("cors-trusted-origins", "Trusted CORS origins (space separated)", func(val string) error {
-		cfg.cors.trustedOrigins = strings.Fields(val)
-		return nil
-	})
-	flag.Parse()
+	cfg.cors.trustedOrigins = strings.Fields(os.Getenv("PULSE_CORS_TRUSTED_ORIGIN"))
+	// DATA SYNC TASKS
+	dataSyncEnabled, _ := strconv.ParseBool(os.Getenv("PULSE_DATA_SYNC_ENABLE"))
+	flag.BoolVar(&cfg.dataSync, "data-sync-enable", dataSyncEnabled, "enable/disable the data sync updates to data providers")
 
 	// Setup logging
 	logger := jsonlog.New(os.Stdout, jsonlog.GetLevel(cfg.logLevel))
+	logger.PrintInfo("DSN", map[string]interface{}{
+		"dsn": cfg.db.dsn,
+	})
 
 	// Fancy ascii splash when starting the app
 	myFigure := figure.NewColorFigure("Pulse API", "", "green", true)
 	myFigure.Print()
+
+	var db *sqlx.DB
+
+	utils.Retry(3, time.Second*5, func() error {
+		d, err := openDB(cfg, *logger)
+		if err != nil {
+			return err
+		}
+		db = d
+		return nil
+	})
 
 	// Connect to the database
 	db, err := openDB(cfg, *logger)
@@ -102,9 +118,12 @@ func main() {
 		logger:   logger,
 		services: NewAlphaServices(repo.NewModels(db), alphaClient, logger),
 	}
-	//TODO - Uncomment
+
 	// Start the data sync tasks to keep data from the API up to date in the DB
-	app.startEconomicReportDataSync()
+	if dataSyncEnabled {
+		logger.PrintInfo("Starting startEconomicReportDataSync", nil)
+		app.startEconomicReportDataSync()
+	}
 
 	// Serve the API
 	err = app.serve()

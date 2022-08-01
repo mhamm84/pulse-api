@@ -41,5 +41,6 @@
 .idea/**/dbnavigator.xml
 /docker/.env
 /.envrc
-/bin/
+/docker/bin/
 /testing/integration/economic/data/main/sql/
+/docker/bin/

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	_ "github.com/lib/pq"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -19,7 +20,7 @@ type EconomicData struct {
 	Change string    `json:"change"`
 }
 
-const sqlPath = "./sql"
+const sqlPath = "../../../sql"
 const inputFilePath = "../"
 
 func main() {
@@ -48,15 +49,19 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
+
+			tableName := strings.Replace(f.Name(), ".json", "", 1)
 			filePath := sqlPath + "/" + strings.Replace(f.Name(), ".json", ".sql", 1)
 			fmt.Println("Creating SQL file " + filePath)
+
 			f, err := os.Create(filePath)
 			if err != nil {
 				panic(err)
 			}
-			tableName := strings.Replace(f.Name(), ".json", "", 1)
 			for _, d := range econData.Data {
-				fmt.Fprintf(f, "INSERT INTO %s (time, value) VALUES ('%s', %s);\n", tableName, d.Date.Format(time.RFC3339), d.Value)
+				insert := fmt.Sprintf("INSERT INTO %s (time, value) VALUES ('%s', %s);\n", tableName, d.Date.Format(time.RFC3339), d.Value)
+
+				fmt.Fprint(f, insert)
 			}
 		}
 	}

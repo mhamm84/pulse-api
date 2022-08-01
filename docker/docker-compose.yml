@@ -24,8 +24,27 @@ services:
       - 5432:5432
     volumes:
       - postgres:/var/lib/postgresql/data
+    networks:
+      - mynet
     command: postgres -c max_wal_size=2GB
     restart: always
+
+  ####################################################################################
+  # pulse api
+  ####################################################################################
+  pulse-api:
+    container_name: pulse-api
+    image: mhamm84/pulse-api
+    env_file:
+      - .env
+    ports:
+      - 9091:9091
+    volumes:
+      - pulse:/var/lib/pulse/data
+    networks:
+      - mynet
+    depends_on:
+      - database
 
   ####################################################################################
   # pgadmin
@@ -41,6 +60,8 @@ services:
       - 15432:80
     volumes:
       - pgadmin:/var/lib/pgadmin
+    networks:
+      - mynet
     depends_on:
       - database
 
@@ -48,5 +69,13 @@ services:
 #volumes
 ####################################################################################
 volumes:
+  pulse:
   postgres:
   pgadmin:
+
+####################################################################################
+#networks
+####################################################################################
+networks:
+  mynet:
+    driver: bridge

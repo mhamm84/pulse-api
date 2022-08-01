@@ -32,6 +32,11 @@ func setupTest(t *testing.T) func(t *testing.T) {
 	if err != nil {
 		t.Log(err)
 	}
+	err = config.TestingConfig.InsertTestData()
+	if err != nil {
+		t.Log(err)
+	}
+
 	require.NoError(t, err)
 
 	return func(t *testing.T) {
