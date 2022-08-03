@@ -18,12 +18,12 @@ var httpClient = &http.Client{Timeout: time.Second * 30}
 
 func TestGetCPIData(t *testing.T) {
 
-	t.Run("TestGetRetailSalesData", func(t *testing.T) {
-		cleanup := setupTest(t)
-		defer cleanup(t)
-
-		assert.Truef(t, true, "")
-	})
+	//t.Run("TestGetRetailSalesData", func(t *testing.T) {
+	//	cleanup := setupTest(t)
+	//	defer cleanup(t)
+	//
+	//	assert.Truef(t, true, "")
+	//})
 
 	t.Run("TestGetCPIData", func(t *testing.T) {
 		cleanup := setupTest(t)
@@ -35,7 +35,6 @@ func TestGetCPIData(t *testing.T) {
 
 		response, err := httpClient.Do(req)
 		assert.NoError(t, err, "")
-
 		defer func() {
 			if tmpErr := response.Body.Close(); tmpErr != nil {
 				err = tmpErr
@@ -48,7 +47,7 @@ func TestGetCPIData(t *testing.T) {
 		err = decoder.Decode(&res)
 		assert.NoError(t, err, "")
 
-		assert.Truef(t, true, "")
+		assert.True(t, len(*res.Data) > 0, "No CPI data found")
 		cleanup(t)
 	})
 }

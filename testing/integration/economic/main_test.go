@@ -18,14 +18,13 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	// add -> // +build integration
-	// SETUP
+	// Give the DB and Pulse API time to work out a connection
+	time.Sleep(20 * time.Second)
 
-	// postgres://username:password@url.com:5432/dbName
-	time.Sleep(5 * time.Second)
 	db, err := helper.OpenDB(helper.TestDns)
-	_, err = db.Exec("CREATE EXTENSION citext")
-	_, err = db.Exec("CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE")
+	if err != nil {
+		panic(err)
+	}
 	if err != nil {
 		panic(err)
 	}
@@ -34,6 +33,7 @@ func TestMain(m *testing.M) {
 	config.TestingConfig.Migration = mig
 	config.TestingConfig.DB = db
 
+	// Run the tests
 	os.Exit(m.Run())
 }
 

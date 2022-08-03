@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-const TestDns = "postgres://pulse_user:password@localhost:5433/pulse_testing?sslmode=disable"
+const TestDns = "postgres://pulse_user:password@localhost:5433/pulse_test_db?sslmode=disable"
 
 func OpenDB(dsn string) (*sqlx.DB, error) {
 	fmt.Println("connecting and pinging postgres")
