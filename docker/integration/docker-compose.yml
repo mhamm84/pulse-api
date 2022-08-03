@@ -4,16 +4,18 @@ services:
   ####################################################################################
   # timescale
   ####################################################################################
-  testingDB:
+  timescale_testing:
     container_name: timescale_testing
     image: 'timescale/timescaledb-ha:pg14-latest'
     env_file:
       - .env
+    expose:
+      - "5433" # Publishes 5433 to other containers but NOT to host machine
     ports:
-      - 5433:5432
+      - "5433:5433"
     volumes:
       - postgres:/var/lib/postgresql/data
-    command: postgres -c max_wal_size=2GB
+    command: postgres -c max_wal_size=2GB -p 5433
     networks:
       - test-net
 
@@ -37,7 +39,6 @@ services:
 ####################################################################################
 networks:
   test-net:
-    driver: bridge
 
 ####################################################################################
 #volumes
