@@ -65,7 +65,8 @@ func main() {
 	flag.StringVar(&cfg.logLevel, "log-level", os.Getenv("PULSE_LOG_LEVEL"), "logging level")
 	flag.IntVar(&cfg.port, "port", 9091, "Pulse API port number")
 	flag.StringVar(&cfg.env, "env", dev, fmt.Sprintf("%s|%s|%s|%s", dev, staging, uat, production))
-	// DB jdbc:postgresql://localhost:5432/pulse
+	// POSTGRESQL
+	fmt.Println(os.Getenv("PULSE_POSTGRES_DSN"))
 	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("PULSE_POSTGRES_DSN"), "Postgres DSN")
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
 	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
@@ -85,9 +86,6 @@ func main() {
 
 	// Setup logging
 	logger := jsonlog.New(os.Stdout, jsonlog.GetLevel(cfg.logLevel))
-	logger.PrintInfo("DSN", map[string]interface{}{
-		"dsn": cfg.db.dsn,
-	})
 
 	// Fancy ascii splash when starting the app
 	myFigure := figure.NewColorFigure("Pulse API", "", "green", true)
@@ -95,17 +93,19 @@ func main() {
 
 	var db *sqlx.DB
 
-	utils.Retry(3, time.Second*5, func() error {
+	err := utils.Retry(5, time.Second*2, func() error {
 		d, err := openDB(cfg, *logger)
 		if err != nil {
+			logger.PrintInfo("Error trying to open connection to postgres", map[string]interface{}{
+				"err": err,
+			})
 			return err
 		}
+		logger.PrintInfo("Setting DB handle", nil)
 		db = d
 		return nil
 	})
 
-	// Connect to the database
-	db, err := openDB(cfg, *logger)
 	if err != nil {
 		panic(err)
 	}
@@ -136,13 +136,16 @@ func main() {
  * Connect to DB
  */
 func openDB(cfg config, logger jsonlog.Logger) (*sqlx.DB, error) {
-	logger.PrintInfo("connecting and pinging postgres", nil)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	logger.PrintInfo("connecting and pinging postgres", map[string]interface{}{
+		"postgres": cfg.db.dsn,
+	})
 	db, err := sqlx.Open("postgres", cfg.db.dsn)
 	if err != nil {
 		return nil, err
 	}
+	logger.PrintInfo("postgres opened", nil)
 
 	db.SetMaxOpenConns(cfg.db.maxOpenConns)
 	db.SetMaxIdleConns(cfg.db.maxIdleConns)
@@ -152,10 +155,11 @@ func openDB(cfg config, logger jsonlog.Logger) (*sqlx.DB, error) {
 	}
 	db.SetConnMaxIdleTime(duration)
 
+	logger.PrintInfo("postgres ping...", nil)
 	err = db.PingContext(ctx)
 	if err != nil {
 		return nil, err
 	}
-
+	logger.PrintInfo("postgres ping success", nil)
 	return db, nil
 }

@@ -9,6 +9,8 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
+// Retry attempts func f, in attempts, backing exponentially off by the specified Duration after each attempt which failed
+// until the max number of attempts have been tried, then return an error
 func Retry(attempts int, sleep time.Duration, f func() error) error {
 	if err := f(); err != nil {
 		if s, ok := err.(stop); ok {
@@ -24,7 +26,6 @@ func Retry(attempts int, sleep time.Duration, f func() error) error {
 		}
 		return err
 	}
-
 	return nil
 }
 

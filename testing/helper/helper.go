@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"net/http"
 	"time"
 )
 
@@ -32,4 +33,10 @@ func OpenDB(dsn string) (*sqlx.DB, error) {
 	}
 
 	return db, nil
+}
+
+func CreateHttpClient() *http.Client {
+	return &http.Client{
+		Timeout: time.Second * 30,
+	}
 }

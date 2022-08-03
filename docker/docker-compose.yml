@@ -9,49 +9,41 @@ services:
   ####################################################################################
   # timescale
   ####################################################################################
-  database:
-    container_name: pulse-timescale-db
+  postgres:
+    container_name: pulse_timescale_db
     image: 'timescale/timescaledb-ha:pg14-latest'
     # By default, a Postgres database is running on the 5432 port.
     # If we want to access the database from our computer (outside the container),
     # we must share the port with our computer's port.
     # The syntax is [port we want on our machine]:[port we want to retrieve in the container]
-
-    # The `env_file` tag allows us to declare an environment file
-    env_file:
-    - .env
     ports:
-      - 5432:5432
+      - "5432:5432"
+    env_file: .env
     volumes:
       - postgres:/var/lib/postgresql/data
-    networks:
-      - mynet
     command: postgres -c max_wal_size=2GB
     restart: always
 
   ####################################################################################
   # pulse api
   ####################################################################################
-  pulse-api:
-    container_name: pulse-api
-    image: mhamm84/pulse-api
-    env_file:
-      - .env
+  pulse_api:
+    container_name: pulse_api
+    image: 'mhamm84/pulse-api'
+    env_file: .env
     ports:
-      - 9091:9091
+      - "9091:9091"
     volumes:
       - pulse:/var/lib/pulse/data
-    networks:
-      - mynet
     depends_on:
-      - database
+      - postgres
 
   ####################################################################################
   # pgadmin
   ####################################################################################
   pgadmin:
     container_name: pulse-pgadmin4
-    image: dpage/pgadmin4:6.10
+    image: 'dpage/pgadmin4:6.10'
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@pgadmin.com
       PGADMIN_DEFAULT_PASSWORD: password
@@ -60,10 +52,8 @@ services:
       - 15432:80
     volumes:
       - pgadmin:/var/lib/pgadmin
-    networks:
-      - mynet
     depends_on:
-      - database
+      - postgres
 
 ####################################################################################
 #volumes
@@ -72,10 +62,3 @@ volumes:
   pulse:
   postgres:
   pgadmin:
-
-####################################################################################
-#networks
-####################################################################################
-networks:
-  mynet:
-    driver: bridge
