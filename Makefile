@@ -35,6 +35,12 @@ db/migrations/down:
 	@echo 'Running down migrations...'
 	migrate -path=./migrations -database=${PULSE_POSTGRES_FROM_HOST_DSN} down
 
+## db/migrations/force version=$1: on any migration error, force to the version passed in
+.PHONY: db/migrations/force
+db/migrations/force:
+	@echo 'Running migration force for version: ${version}...'
+	migrate -path=./migrations -database=${PULSE_POSTGRES_FROM_HOST_DSN} force ${version}
+
 # ==================================================================================== #
 # QUALITY CONTROL
 # ==================================================================================== #

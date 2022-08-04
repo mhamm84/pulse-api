@@ -50,6 +50,8 @@ const (
 	TreasuryYieldSevenYear
 	TreasuryYieldTenYear
 	TreasuryYieldThirtyYear
+	RealGDP
+	RealGdpPerCapita
 	Unknown
 )
 
@@ -111,6 +113,10 @@ func (r ReportType) String() string {
 		return "TREASURY_YIELD_TEN_YEAR"
 	case TreasuryYieldThirtyYear:
 		return "TREASURY_YIELD_THIRTY_YEAR"
+	case RealGDP:
+		return "REAL_GDP"
+	case RealGdpPerCapita:
+		return "REAL_GDP_PER_CAPITA"
 	default:
 		return "Unknown"
 	}
@@ -138,6 +144,10 @@ func TableFromReportType(reportType ReportType) string {
 		return string(treasuryYieldTenYearTableName)
 	case TreasuryYieldThirtyYear:
 		return string(treasuryYieldThirtyYearTableName)
+	case RealGDP:
+		return string(realGdpTableName)
+	case RealGdpPerCapita:
+		return string(realGdpPerCapitaTableName)
 	default:
 		return "unknown"
 	}
@@ -153,6 +163,8 @@ const (
 	treasuryYieldSevenYearTableName  tableName = "treasury_yield_seven_year"
 	treasuryYieldTenYearTableName    tableName = "treasury_yield_ten_year"
 	treasuryYieldThirtyYearTableName tableName = "treasury_yield_thirty_year"
+	realGdpTableName                 tableName = "real_gdp"
+	realGdpPerCapitaTableName        tableName = "real_gdp_per_capita"
 )
 
 func (r ReportType) ToTable() string {
