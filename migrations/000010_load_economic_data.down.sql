@@ -1,0 +1,11 @@
+TRUNCATE TABLE cpi;
+TRUNCATE TABLE retail_sales;
+TRUNCATE TABLE consumer_sentiment;
+TRUNCATE TABLE real_gdp;
+TRUNCATE TABLE real_gdp_per_capita;
+TRUNCATE TABLE treasury_yield_three_month;
+TRUNCATE TABLE treasury_yield_two_year;
+TRUNCATE TABLE treasury_yield_five_year;
+TRUNCATE TABLE treasury_yield_seven_year;
+TRUNCATE TABLE treasury_yield_ten_year;
+TRUNCATE TABLE treasury_yield_thirty_year;

@@ -52,6 +52,7 @@ const (
 	TreasuryYieldThirtyYear
 	RealGDP
 	RealGdpPerCapita
+	FederalFundsRate
 	Unknown
 )
 
@@ -117,6 +118,8 @@ func (r ReportType) String() string {
 		return "REAL_GDP"
 	case RealGdpPerCapita:
 		return "REAL_GDP_PER_CAPITA"
+	case FederalFundsRate:
+		return "FEDERAL_FUNDS_RATE"
 	default:
 		return "Unknown"
 	}
@@ -148,6 +151,8 @@ func TableFromReportType(reportType ReportType) string {
 		return string(realGdpTableName)
 	case RealGdpPerCapita:
 		return string(realGdpPerCapitaTableName)
+	case FederalFundsRate:
+		return string(federalFundsRateTableName)
 	default:
 		return "unknown"
 	}
@@ -165,6 +170,7 @@ const (
 	treasuryYieldThirtyYearTableName tableName = "treasury_yield_thirty_year"
 	realGdpTableName                 tableName = "real_gdp"
 	realGdpPerCapitaTableName        tableName = "real_gdp_per_capita"
+	federalFundsRateTableName        tableName = "federal_funds_rate"
 )
 
 func (r ReportType) ToTable() string {
