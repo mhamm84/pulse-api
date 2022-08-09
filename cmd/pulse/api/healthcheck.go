@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"net/http"
@@ -9,8 +9,8 @@ func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Reques
 	env := envelope{
 		"status": "up",
 		"system_info": map[string]string{
-			"environment": app.cfg.env,
-			"version":     version,
+			"environment": app.cfg.Env,
+			"version":     "1.0.0",
 		},
 	}
 

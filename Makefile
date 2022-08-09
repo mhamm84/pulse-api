@@ -15,7 +15,7 @@ confirm:
 ## api/go/run: run the cmd/api application
 .PHONY: api/go/run
 api/go/run:
-	go run ./cmd/api/ -db-dsn=${PULSE_POSTGRES_DSN} -cors-trusted-origins="http://localhost:9090" -log-level="DEBUG"
+	go run ./cmd/pulse/ run-api --db-dsn=${PULSE_POSTGRES_DSN} --cors-trusted-origins="http://localhost:9090" --log-level="DEBUG"
 
 ## db/migrations/new name=$1: create a new database migration
 .PHONY: db/migrations/new
@@ -44,7 +44,7 @@ db/migrations/force:
 # ==================================================================================== #
 # QUALITY CONTROL
 # ==================================================================================== #
-## audit: tidy dependencies and format, vet and test all code
+## api/audit: tidy dependencies and format, vet and test all code
 .PHONY: api/audit
 api/audit:
 	@echo 'Tidying and verifying module dependencies...'
@@ -60,8 +60,8 @@ api/audit:
 .PHONY: api/build
 api/build: api/audit
 	@echo "Building pulse API..."
-	go build -o=./docker/bin/api ./cmd/api/
-	GOOS=linux GOARCH=amd64 go build -o=./docker/bin/linux_amd64/api ./cmd/api/
+	go build -o=./docker/bin/pulse ./cmd/pulse/
+	GOOS=linux GOARCH=amd64 go build -o=./docker/bin/linux_amd64/pulse ./cmd/pulse/
 
 ## api/docker/build: build docker image for the pulse api
 .PHONY: api/docker/build

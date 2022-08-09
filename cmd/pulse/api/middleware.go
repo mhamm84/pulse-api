@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"fmt"
@@ -29,8 +29,8 @@ func (app *application) enableCORS(next http.Handler) http.Handler {
 
 		origin := r.Header.Get("Origin")
 		if origin != "" {
-			for i := range app.cfg.cors.trustedOrigins {
-				if origin == app.cfg.cors.trustedOrigins[i] {
+			for i := range app.cfg.Cors.TrustedOrigins {
+				if origin == app.cfg.Cors.TrustedOrigins[i] {
 					w.Header().Set("Access-Control-Allow-Origin", origin)
 
 					// preflight request.
@@ -75,7 +75,7 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 	}()
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if app.cfg.limiter.enabled {
+		if app.cfg.Limiter.Enabled {
 			host, _, err := net.SplitHostPort(r.RemoteAddr)
 			if err != nil {
 				app.serverErrorResponse(w, r, err)
@@ -84,7 +84,7 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 
 			mux.Lock()
 			if _, found := clients[host]; !found {
-				clients[host] = &client{limiter: rate.NewLimiter(rate.Limit(app.cfg.limiter.rps), app.cfg.limiter.burst)}
+				clients[host] = &client{limiter: rate.NewLimiter(rate.Limit(app.cfg.Limiter.RPS), app.cfg.Limiter.Burst)}
 			}
 
 			clients[host].lastActive = time.Now()

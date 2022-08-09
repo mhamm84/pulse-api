@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 
 func (app *application) serve() error {
 	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", app.cfg.port),
+		Addr:         fmt.Sprintf(":%d", app.cfg.Port),
 		Handler:      http.TimeoutHandler(app.routes(), 5*time.Second, "timeout limit of request reached"),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
@@ -24,7 +24,7 @@ func (app *application) serve() error {
 
 	app.logger.PrintInfo("starting Pulse server", map[string]interface{}{
 		"addr": srv.Addr,
-		"env":  app.cfg.env,
+		"env":  app.cfg.Env,
 	})
 
 	go func() {
@@ -53,7 +53,7 @@ func (app *application) serve() error {
 
 	app.logger.PrintInfo("stopped Pulse server", map[string]interface{}{
 		"addr": srv.Addr,
-		"env":  app.cfg.env,
+		"env":  app.cfg.Env,
 	})
 
 	return nil

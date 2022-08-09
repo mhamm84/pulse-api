@@ -45,3 +45,4 @@
 /testing/integration/economic/data/main/sql/
 /docker/bin/
 /docker/integration/.env
+/cmd/pulse/pulse

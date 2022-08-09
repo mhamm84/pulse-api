@@ -5,7 +5,7 @@ FROM alpine
 RUN mkdir /app
 
 # Copy all files from the current directory to the app directory
-ADD /bin/linux_amd64/api /app
+ADD /bin/linux_amd64/pulse /app
 
 # Set working directory
 WORKDIR /app
@@ -15,5 +15,5 @@ WORKDIR /app
 #RUN go build -o server .
 EXPOSE 9091 9091
 # Run the server executable
-ENTRYPOINT ["/app/api"]
-CMD ["-cors-trusted-origins=$PULSE_CORS_TRUSTED_ORIGIN"]
+ENTRYPOINT ["/app/pulse", "run-api"]
+#CMD ["run-api", "--cors-trusted-origins=$PULSE_CORS_TRUSTED_ORIGIN"]
