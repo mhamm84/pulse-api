@@ -6,6 +6,7 @@ replace github.com/mhamm84/gofinance-alpha => ../../gofinance/gofinance-alpha
 
 require (
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be
+	github.com/go-mail/mail/v2 v2.3.0
 	github.com/golang-migrate/migrate v3.5.4+incompatible
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/julienschmidt/httprouter v1.3.0
@@ -17,6 +18,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.12.0
 	github.com/stretchr/testify v1.8.0
+	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858
 )
 
@@ -46,7 +48,9 @@ require (
 	github.com/subosito/gotenv v1.3.0 // indirect
 	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
 	golang.org/x/text v0.3.7 // indirect
+	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
+	gopkg.in/mail.v2 v2.3.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

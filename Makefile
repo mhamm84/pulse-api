@@ -69,24 +69,39 @@ api/docker/build: api/build
 	@echo "Building pulse API Docker Image"
 	docker build -t mhamm84/pulse-api ./docker
 
-## pulse/up: spin up the docker stack
+## pulse/up: create and start Pulse API containers
 .PHONY: pulse/up
 pulse/up: api/docker/build
-	@echo "Spinning up Pulse API stack"
+	@echo "Creating and starting Pulse API containers..."
 	cd docker ; \
     	docker-compose up -d
 
-## pulse/down: spin down the docker stack
+
+## pulse/start: start all docker containers
+.PHONY: pulse/start
+pulse/start:
+	@echo "Starting Pulse API stack..."
+	cd docker ; \
+    	docker-compose start
+
+## pulse/stop: stop all docker containers
+.PHONY: pulse/stop
+pulse/stop:
+	@echo "Stopping Pulse API stack..."
+	cd docker ; \
+    	docker-compose stop
+
+## pulse/down: stop and remove all docker containers
 .PHONY: pulse/down
 pulse/down:
-	@echo "Spinning down Pulse API stack"
+	@echo "Stopping & removing Pulse API containers..."
 	cd docker ; \
     	docker-compose down
 
-## integration/up: spin up the integration test docker stack
+## integration/up: create & start integration test docker containers
 .PHONY: integration/up
 integration/up: api/docker/build
-	@echo 'Spinning up docker for integration tests'
+	@echo 'Spinning up docker containers for integration tests...'
 	cd docker/integration ; \
 		docker-compose up -d
 

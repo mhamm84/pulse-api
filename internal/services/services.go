@@ -1,4 +1,4 @@
-package api
+package services
 
 import (
 	"context"
@@ -11,14 +11,19 @@ import (
 	"time"
 )
 
-type Services struct {
-	alphaVantageEconomicService EconomicService
-	economicdashservice         EconomicDashboardService
+type ServicesModel struct {
+	AlphaVantageEconomicService EconomicService
+	Economicdashservice         EconomicDashboardService
+	UserService                 UserService
+	TokenService                TokenService
 }
 
-func NewAlphaServices(models repo.Models, client alpha.ClientInterface, logger *jsonlog.Logger) Services {
-	return Services{
-		alphaVantageEconomicService: alpha.AlphaVantageEconomicService{
+func NewServicesModel(models repo.Models, client alpha.ClientInterface, logger *jsonlog.Logger) ServicesModel {
+	newTokenService := NewTokenService(models.TokenRepository, logger)
+	newUserService := NewUserService(models.UserRepository, newTokenService, logger)
+
+	return ServicesModel{
+		AlphaVantageEconomicService: alpha.AlphaVantageEconomicService{
 			EconomicRepository: models.EconomicRepository,
 			ReportRepository:   models.ReportRepository,
 			Client:             client,
@@ -28,7 +33,9 @@ func NewAlphaServices(models repo.Models, client alpha.ClientInterface, logger *
 				DailyLimiter:  rate.NewLimiter(rate.Every(24*time.Hour), 500),
 			},
 		},
-		economicdashservice: economic.DashboardService{EconomicRepository: models.EconomicRepository, Logger: logger},
+		Economicdashservice: economic.DashboardService{EconomicRepository: models.EconomicRepository, Logger: logger},
+		TokenService:        newTokenService,
+		UserService:         newUserService,
 	}
 }
 
@@ -40,4 +47,12 @@ type EconomicService interface {
 
 type EconomicDashboardService interface {
 	GetDashboardSummary() (*[]data.Summary, error)
+}
+
+type UserService interface {
+	RegisterUser(user *data.User) (*data.Token, error)
+}
+
+type TokenService interface {
+	New(userID int64, ttl time.Duration, scope string) (*data.Token, error)
 }

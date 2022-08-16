@@ -25,6 +25,8 @@ func (app application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, pathWithVersion("/%s/economic/retail_sales"), app.retailSalesDataByYears)
 	router.HandlerFunc(http.MethodGet, pathWithVersion("/%s/economic/treasury_yield/:maturity"), app.treasuryYieldByYears)
 
+	router.HandlerFunc(http.MethodPost, pathWithVersion("/%s/users"), app.registerUserHandler)
+
 	return app.recoverPanic(app.enableCORS(app.rateLimit(router)))
 }
 

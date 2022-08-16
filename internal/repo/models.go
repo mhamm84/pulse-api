@@ -9,11 +9,15 @@ import (
 type Models struct {
 	EconomicRepository data.EconomicRepository
 	ReportRepository   data.ReportRepository
+	UserRepository     data.UserRepository
+	TokenRepository    data.TokenRepository
 }
 
 func NewModels(db *sqlx.DB) Models {
 	return Models{
 		EconomicRepository: postgres.NewEconomicRepository(db),
 		ReportRepository:   postgres.NewReportRepository(db),
+		UserRepository:     postgres.NewUserRepository(db),
+		TokenRepository:    postgres.NewTokenRepository(db),
 	}
 }

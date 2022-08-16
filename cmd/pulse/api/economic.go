@@ -43,7 +43,7 @@ func (app *application) treasuryYieldByYears(w http.ResponseWriter, r *http.Requ
 		app.logger.PrintInfo("Unknown maturity to get treasury yield data", map[string]interface{}{
 			"maturity": maturity,
 		})
-		app.badRequestHandler(w, r)
+		app.badRequestResponse(w, r)
 		return
 	}
 	getEconomicDataByYears(r.Context(), app, reportType, w, r)
@@ -76,7 +76,7 @@ func getEconomicDataByYears(ctx context.Context, app *application, report data.R
 	dataChan := make(chan data.EconomicWithChangeResult)
 	errChan := make(chan error)
 
-	go app.services.alphaVantageEconomicService.GetIntervalWithPercentChange(r.Context(), dataChan, errChan, report, years, input.Paging)
+	go app.services.AlphaVantageEconomicService.GetIntervalWithPercentChange(r.Context(), dataChan, errChan, report, years, input.Paging)
 
 	select {
 	case data := <-dataChan:

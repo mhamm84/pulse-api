@@ -22,11 +22,6 @@ func (app *application) serve() error {
 
 	shutdownError := make(chan error)
 
-	app.logger.PrintInfo("starting Pulse server", map[string]interface{}{
-		"addr": srv.Addr,
-		"env":  app.cfg.Env,
-	})
-
 	go func() {
 		quit := make(chan os.Signal, 1)
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)

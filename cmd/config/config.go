@@ -18,6 +18,13 @@ type ApiConfig struct {
 	}
 	DataSync bool
 	LogLevel string
+	SMTP     struct {
+		Host     string
+		Port     int
+		Username string
+		Password string
+		Sender   string
+	}
 }
 
 type DbConfig struct {
