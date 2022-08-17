@@ -18,6 +18,10 @@ func NewUserService(userRepository data.UserRepository, tokenService TokenServic
 	return &userService{userRepository, tokenService, mailer, logger}
 }
 
+func (u *userService) GetByEmail(email string) (*data.User, error) {
+	return u.UserRepository.GetByEmail(email)
+}
+
 func (u *userService) ActivateUser(token string) (*data.User, error) {
 
 	user, err := u.UserRepository.GetUserFromToken(data.ScopeActivation, token)

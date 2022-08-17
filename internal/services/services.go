@@ -53,6 +53,7 @@ type EconomicDashboardService interface {
 type UserService interface {
 	RegisterUser(user *data.User) error
 	ActivateUser(token string) (*data.User, error)
+	GetByEmail(email string) (*data.User, error)
 }
 
 type TokenService interface {
