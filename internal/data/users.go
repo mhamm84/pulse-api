@@ -8,13 +8,13 @@ import (
 )
 
 type User struct {
-	ID        int64
-	CreatedAt time.Time
-	Name      string
-	Email     string
-	Password  password
-	Activated bool
-	Version   int
+	ID        int64     `json:"id" db:"id"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	Name      string    `json:"name" db:"name"`
+	Email     string    `json:"email" db:"email"`
+	Password  password  `json:"-" db:"password_hash"`
+	Activated bool      `json:"activated" db:"activated"`
+	Version   int       `json:"-" db:"version"`
 }
 
 type password struct {
@@ -78,4 +78,7 @@ func ValidateUser(v *validator.Validator, user *User) {
 
 type UserRepository interface {
 	Insert(user *User) error
+	Update(user *User) error
+	GetByEmail(email string) (*User, error)
+	GetUserFromToken(tokenScope, tokenplaintext string) (*User, error)
 }

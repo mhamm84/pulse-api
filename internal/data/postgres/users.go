@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
 	"errors"
 	"github.com/jmoiron/sqlx"
@@ -17,6 +18,46 @@ type userpg struct {
 
 func NewUserRepository(db *sqlx.DB) data.UserRepository {
 	return &userpg{db: db}
+}
+
+func (p *userpg) GetUserFromToken(tokenScope, tokenplaintext string) (*data.User, error) {
+
+	tokenHash := sha256.Sum256([]byte(tokenplaintext))
+
+	query := `
+		SELECT u.id, u.created_at, u.name, u.email, u.password_hash, u.activated, u.version
+		FROM users u
+		INNER JOIN tokens t ON t.user_id = u.id
+		WHERE t.hash = $1
+		AND t.scope = $2
+		AND t.expiry > $3
+	`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	args := []interface{}{tokenHash[:], tokenScope, time.Now()}
+
+	var user data.User
+	err := p.db.QueryRowContext(ctx, query, args...).Scan(
+		&user.ID,
+		&user.CreatedAt,
+		&user.Name,
+		&user.Email,
+		&user.Password.Hash,
+		&user.Activated,
+		&user.Version,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, data.ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &user, nil
 }
 
 func (p *userpg) Insert(user *data.User) error {

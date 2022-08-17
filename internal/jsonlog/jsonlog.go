@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"os"
-	"runtime/debug"
 	"sync"
 	"time"
 )
@@ -107,9 +106,9 @@ func (l *Logger) print(level Level, message string, properties map[string]interf
 		Properties: properties,
 	}
 
-	if level >= LevelError {
-		aux.Trace = string(debug.Stack())
-	}
+	//if level >= LevelError {
+	//	aux.Trace = string(debug.Stack())
+	//}
 
 	var line []byte
 

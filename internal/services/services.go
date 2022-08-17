@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/mhamm84/pulse-api/internal/data"
 	"github.com/mhamm84/pulse-api/internal/jsonlog"
+	"github.com/mhamm84/pulse-api/internal/mailer"
 	"github.com/mhamm84/pulse-api/internal/repo"
 	"github.com/mhamm84/pulse-api/internal/services/economic"
 	"github.com/mhamm84/pulse-api/internal/services/economic/alpha"
@@ -18,9 +19,9 @@ type ServicesModel struct {
 	TokenService                TokenService
 }
 
-func NewServicesModel(models repo.Models, client alpha.ClientInterface, logger *jsonlog.Logger) ServicesModel {
+func NewServicesModel(models repo.Models, client alpha.ClientInterface, mailer *mailer.Mailer, logger *jsonlog.Logger) ServicesModel {
 	newTokenService := NewTokenService(models.TokenRepository, logger)
-	newUserService := NewUserService(models.UserRepository, newTokenService, logger)
+	newUserService := NewUserService(models.UserRepository, newTokenService, mailer, logger)
 
 	return ServicesModel{
 		AlphaVantageEconomicService: alpha.AlphaVantageEconomicService{
@@ -50,9 +51,11 @@ type EconomicDashboardService interface {
 }
 
 type UserService interface {
-	RegisterUser(user *data.User) (*data.Token, error)
+	RegisterUser(user *data.User) error
+	ActivateUser(token string) (*data.User, error)
 }
 
 type TokenService interface {
 	New(userID int64, ttl time.Duration, scope string) (*data.Token, error)
+	DeleteAllForUser(userId int64, scope string) error
 }

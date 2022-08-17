@@ -12,11 +12,11 @@ const (
 )
 
 type Token struct {
-	Plaintext string
-	Hash      []byte
-	UserId    int64
-	Expiry    time.Time
-	Scope     string
+	Plaintext string    `json:"token"`
+	Hash      []byte    `json:"-" db:"hash"`
+	UserId    int64     `json:"-" db:"user_id"`
+	Expiry    time.Time `json:"expiry" db:"expiry"`
+	Scope     string    `json:"-" db:"scope"`
 }
 
 func GenerateToken(userId int64, ttl time.Duration, scope string) (*Token, error) {
@@ -33,7 +33,7 @@ func GenerateToken(userId int64, ttl time.Duration, scope string) (*Token, error
 	}
 
 	token.Plaintext = base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(randomBytes)
-	hash := sha256.Sum256(randomBytes)
+	hash := sha256.Sum256([]byte(token.Plaintext))
 	token.Hash = hash[:]
 
 	return token, nil
@@ -41,5 +41,5 @@ func GenerateToken(userId int64, ttl time.Duration, scope string) (*Token, error
 
 type TokenRepository interface {
 	Insert(token *Token) error
-	DeleteAllForUser(userId uint64, scope string) error
+	DeleteAllForUser(userId int64, scope string) error
 }

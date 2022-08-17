@@ -29,17 +29,18 @@ func (t *tokenpg) Insert(token *data.Token) error {
 	return err
 }
 
-func (t *tokenpg) DeleteAllForUser(userId uint64, scope string) error {
+func (t *tokenpg) DeleteAllForUser(userId int64, scope string) error {
 	query := `
 		DELETE FROM tokens 
-		WHERE scope = $1 AND user_id = $2
+		WHERE user_id = $1 
+		AND scope = $2
 	`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	args := []interface{}{userId, scope}
-	_, err := t.DB.ExecContext(ctx, query, args)
+	_, err := t.DB.ExecContext(ctx, query, args...)
 
 	return err
 }

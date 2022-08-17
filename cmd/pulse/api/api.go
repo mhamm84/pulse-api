@@ -19,7 +19,7 @@ type application struct {
 	cfg      config.ApiConfig
 	logger   *jsonlog.Logger
 	services services.ServicesModel
-	mailer   mailer.Mailer
+	mailer   *mailer.Mailer
 }
 
 func StartApi(cfg *config.ApiConfig) {
@@ -37,12 +37,15 @@ func StartApi(cfg *config.ApiConfig) {
 	// Create Alpha Client
 	alphaClient := alpha.NewClient(cfg.AlphaVantage.BaseUrl, cfg.AlphaVantage.Token)
 
+	// SMTP mailer
+	mailer := mailer.New(cfg.SMTP.Host, cfg.SMTP.Port, cfg.SMTP.Username, cfg.SMTP.Password, cfg.SMTP.Sender)
+
 	// Create the app
 	app := application{
 		cfg:      *cfg,
 		logger:   logger,
-		services: services.NewServicesModel(repo.NewModels(db), alphaClient, logger),
-		mailer:   mailer.New(cfg.SMTP.Host, cfg.SMTP.Port, cfg.SMTP.Username, cfg.SMTP.Password, cfg.SMTP.Sender),
+		services: services.NewServicesModel(repo.NewModels(db), alphaClient, mailer, logger),
+		mailer:   mailer,
 	}
 
 	// Start the data sync tasks to keep data from the API up to date in the DB

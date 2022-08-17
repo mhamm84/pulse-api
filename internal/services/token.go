@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+const (
+	tokenValidationKey = "token"
+)
+
 type tokenService struct {
 	TokenRepository data.TokenRepository
 	Logger          *jsonlog.Logger
@@ -16,9 +20,9 @@ func NewTokenService(tokenRepo data.TokenRepository, logger *jsonlog.Logger) Tok
 	return &tokenService{tokenRepo, logger}
 }
 
-const (
-	tokenValidationKey = "token"
-)
+func (s *tokenService) DeleteAllForUser(userId int64, scope string) error {
+	return s.TokenRepository.DeleteAllForUser(userId, scope)
+}
 
 func (s *tokenService) New(userID int64, ttl time.Duration, scope string) (*data.Token, error) {
 	token, err := data.GenerateToken(userID, ttl, scope)

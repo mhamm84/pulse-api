@@ -16,12 +16,12 @@ type Mailer struct {
 	sender string
 }
 
-func New(host string, port int, username, password, sender string) Mailer {
+func New(host string, port int, username, password, sender string) *Mailer {
 
 	d := mail.NewDialer(host, port, username, password)
 	d.Timeout = 5 * time.Second
 
-	return Mailer{
+	return &Mailer{
 		dialer: d,
 		sender: sender,
 	}
