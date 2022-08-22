@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+var AnonymousUser = &User{}
+
 type User struct {
 	ID        int64     `json:"id" db:"id"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
@@ -16,6 +18,10 @@ type User struct {
 	Activated bool      `json:"activated" db:"activated"`
 	Version   int       `json:"-" db:"version"`
 }
+
+//func (u *User) isAnonymousUser() bool {
+//	return u == AnonymousUser
+//}
 
 type password struct {
 	Plaintext *string
@@ -80,5 +86,5 @@ type UserRepository interface {
 	Insert(user *User) error
 	Update(user *User) error
 	GetByEmail(email string) (*User, error)
-	GetUserFromToken(tokenScope, tokenplaintext string) (*User, error)
+	GetFromToken(tokenScope, tokenplaintext string) (*User, error)
 }

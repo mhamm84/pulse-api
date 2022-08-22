@@ -43,7 +43,7 @@ services:
   ####################################################################################
   pgadmin:
     container_name: pulse-pgadmin4
-    image: 'dpage/pgadmin4:6.10'
+    image: 'dpage/pgadmin4:6.12'
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@pgadmin.com
       PGADMIN_DEFAULT_PASSWORD: password

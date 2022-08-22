@@ -8,14 +8,19 @@ import (
 )
 
 type userService struct {
-	UserRepository data.UserRepository
-	TokenService   TokenService
-	Mailer         *mailer.Mailer
-	Logger         *jsonlog.Logger
+	UserRepository        data.UserRepository
+	PermissionsRepository data.PermissionsRepository
+	TokenService          TokenService
+	Mailer                *mailer.Mailer
+	Logger                *jsonlog.Logger
 }
 
-func NewUserService(userRepository data.UserRepository, tokenService TokenService, mailer *mailer.Mailer, logger *jsonlog.Logger) UserService {
-	return &userService{userRepository, tokenService, mailer, logger}
+func NewUserService(userRepository data.UserRepository, permissionsRepository data.PermissionsRepository, tokenService TokenService, mailer *mailer.Mailer, logger *jsonlog.Logger) UserService {
+	return &userService{userRepository, permissionsRepository, tokenService, mailer, logger}
+}
+
+func (u *userService) GetFromToken(tokenScope, tokenplaintext string) (*data.User, error) {
+	return u.UserRepository.GetFromToken(tokenScope, tokenplaintext)
 }
 
 func (u *userService) GetByEmail(email string) (*data.User, error) {
@@ -24,9 +29,9 @@ func (u *userService) GetByEmail(email string) (*data.User, error) {
 
 func (u *userService) ActivateUser(token string) (*data.User, error) {
 
-	user, err := u.UserRepository.GetUserFromToken(data.ScopeActivation, token)
+	user, err := u.UserRepository.GetFromToken(data.ScopeActivation, token)
 	if err != nil {
-		u.Logger.PrintError(err, map[string]interface{}{"function": "GetUserFromToken"})
+		u.Logger.PrintError(err, map[string]interface{}{"function": "GetFromToken"})
 		return nil, err
 	}
 
@@ -48,7 +53,15 @@ func (u *userService) ActivateUser(token string) (*data.User, error) {
 
 func (u *userService) RegisterUser(user *data.User) error {
 
+	// TODO
+	// Need tp create a DB transaction and pass to all repo functions altering DB state
+
 	err := u.UserRepository.Insert(user)
+	if err != nil {
+		return err
+	}
+
+	err = u.PermissionsRepository.AddForUser(user.ID, "economic:all")
 	if err != nil {
 		return err
 	}

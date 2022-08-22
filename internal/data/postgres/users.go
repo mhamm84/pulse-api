@@ -20,7 +20,7 @@ func NewUserRepository(db *sqlx.DB) data.UserRepository {
 	return &userpg{db: db}
 }
 
-func (p *userpg) GetUserFromToken(tokenScope, tokenplaintext string) (*data.User, error) {
+func (p *userpg) GetFromToken(tokenScope, tokenplaintext string) (*data.User, error) {
 
 	tokenHash := sha256.Sum256([]byte(tokenplaintext))
 

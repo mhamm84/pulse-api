@@ -16,12 +16,13 @@ type ServicesModel struct {
 	AlphaVantageEconomicService EconomicService
 	Economicdashservice         EconomicDashboardService
 	UserService                 UserService
+	PermissionsService          PermissionsService
 	TokenService                TokenService
 }
 
 func NewServicesModel(models repo.Models, client alpha.ClientInterface, mailer *mailer.Mailer, logger *jsonlog.Logger) ServicesModel {
 	newTokenService := NewTokenService(models.TokenRepository, logger)
-	newUserService := NewUserService(models.UserRepository, newTokenService, mailer, logger)
+	newUserService := NewUserService(models.UserRepository, models.PermissionsRepository, newTokenService, mailer, logger)
 
 	return ServicesModel{
 		AlphaVantageEconomicService: alpha.AlphaVantageEconomicService{
@@ -37,6 +38,7 @@ func NewServicesModel(models repo.Models, client alpha.ClientInterface, mailer *
 		Economicdashservice: economic.DashboardService{EconomicRepository: models.EconomicRepository, Logger: logger},
 		TokenService:        newTokenService,
 		UserService:         newUserService,
+		PermissionsService:  NewPermissionsService(models.PermissionsRepository, logger),
 	}
 }
 
@@ -54,6 +56,11 @@ type UserService interface {
 	RegisterUser(user *data.User) error
 	ActivateUser(token string) (*data.User, error)
 	GetByEmail(email string) (*data.User, error)
+	GetFromToken(tokenScope, tokenplaintext string) (*data.User, error)
+}
+
+type PermissionsService interface {
+	GetAllForUser(userId int64) (data.Permissions, error)
 }
 
 type TokenService interface {
