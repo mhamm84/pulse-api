@@ -10,6 +10,10 @@ import (
 	"time"
 )
 
+func (app *application) durableGoodsOrders(w http.ResponseWriter, r *http.Request) {
+	getEconomicDataByYears(r.Context(), app, data.DurableGoodsOrders, w, r)
+}
+
 func (app *application) federalFundsRate(w http.ResponseWriter, r *http.Request) {
 	getEconomicDataByYears(r.Context(), app, data.FederalFundsRate, w, r)
 }

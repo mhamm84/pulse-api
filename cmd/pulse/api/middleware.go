@@ -20,11 +20,18 @@ func (app *application) requirePermissions(code string, next http.HandlerFunc) h
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		user := app.contextGetUser(r)
 
+		app.logger.PrintInfo("requirePermissions code", map[string]interface{}{
+			"code": code,
+		})
 		permissions, err := app.services.PermissionsService.GetAllForUser(user.ID)
 		if err != nil {
 			app.serverErrorResponse(w, r, err)
 			return
 		}
+		app.logger.PrintInfo("permissions found", map[string]interface{}{
+			"user.ID":     user.ID,
+			"permissions": permissions,
+		})
 
 		if !permissions.Included(code) {
 			app.notPermittedResponse(w, r)

@@ -53,6 +53,7 @@ const (
 	RealGDP
 	RealGdpPerCapita
 	FederalFundsRate
+	DurableGoodsOrders
 	Unknown
 )
 
@@ -120,6 +121,8 @@ func (r ReportType) String() string {
 		return "REAL_GDP_PER_CAPITA"
 	case FederalFundsRate:
 		return "FEDERAL_FUNDS_RATE"
+	case DurableGoodsOrders:
+		return "DURABLE_GOODS_ORDERS"
 	default:
 		return "Unknown"
 	}
@@ -153,6 +156,8 @@ func TableFromReportType(reportType ReportType) string {
 		return string(realGdpPerCapitaTableName)
 	case FederalFundsRate:
 		return string(federalFundsRateTableName)
+	case DurableGoodsOrders:
+		return string(durableGoodsOrdersTableName)
 	default:
 		return "unknown"
 	}
@@ -171,6 +176,7 @@ const (
 	realGdpTableName                 tableName = "real_gdp"
 	realGdpPerCapitaTableName        tableName = "real_gdp_per_capita"
 	federalFundsRateTableName        tableName = "federal_funds_rate"
+	durableGoodsOrdersTableName      tableName = "durable_goods_orders"
 )
 
 func (r ReportType) ToTable() string {

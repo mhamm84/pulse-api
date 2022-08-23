@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS durable_goods_orders;
