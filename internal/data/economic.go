@@ -54,6 +54,10 @@ const (
 	RealGdpPerCapita
 	FederalFundsRate
 	DurableGoodsOrders
+	Unemployment
+	NonfarmPayroll
+	Inflation
+	InflationExpectation
 	Unknown
 )
 
@@ -123,6 +127,14 @@ func (r ReportType) String() string {
 		return "FEDERAL_FUNDS_RATE"
 	case DurableGoodsOrders:
 		return "DURABLE_GOODS_ORDERS"
+	case Unemployment:
+		return "UNEMPLOYMENT"
+	case NonfarmPayroll:
+		return "NONFARM_PAYROLL"
+	case Inflation:
+		return "INFLATION"
+	case InflationExpectation:
+		return "INFLATION_EXPECTATION"
 	default:
 		return "Unknown"
 	}
@@ -158,6 +170,14 @@ func TableFromReportType(reportType ReportType) string {
 		return string(federalFundsRateTableName)
 	case DurableGoodsOrders:
 		return string(durableGoodsOrdersTableName)
+	case Unemployment:
+		return string(unemploymentTableName)
+	case NonfarmPayroll:
+		return string(nonfarmPayrollsTableName)
+	case Inflation:
+		return string(inflationTableName)
+	case InflationExpectation:
+		return string(inflationExpectationTableName)
 	default:
 		return "unknown"
 	}
@@ -177,6 +197,10 @@ const (
 	realGdpPerCapitaTableName        tableName = "real_gdp_per_capita"
 	federalFundsRateTableName        tableName = "federal_funds_rate"
 	durableGoodsOrdersTableName      tableName = "durable_goods_orders"
+	unemploymentTableName            tableName = "unemployment"
+	nonfarmPayrollsTableName         tableName = "nonfarm_payrolls"
+	inflationTableName               tableName = "inflation"
+	inflationExpectationTableName    tableName = "inflation_expectation"
 )
 
 func (r ReportType) ToTable() string {

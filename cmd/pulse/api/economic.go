@@ -10,6 +10,22 @@ import (
 	"time"
 )
 
+func (app *application) inflationExpectation(w http.ResponseWriter, r *http.Request) {
+	getEconomicDataByYears(r.Context(), app, data.InflationExpectation, w, r)
+}
+
+func (app *application) inflation(w http.ResponseWriter, r *http.Request) {
+	getEconomicDataByYears(r.Context(), app, data.Inflation, w, r)
+}
+
+func (app *application) nonfarmPayroll(w http.ResponseWriter, r *http.Request) {
+	getEconomicDataByYears(r.Context(), app, data.NonfarmPayroll, w, r)
+}
+
+func (app *application) unemployemnt(w http.ResponseWriter, r *http.Request) {
+	getEconomicDataByYears(r.Context(), app, data.Unemployment, w, r)
+}
+
 func (app *application) durableGoodsOrders(w http.ResponseWriter, r *http.Request) {
 	getEconomicDataByYears(r.Context(), app, data.DurableGoodsOrders, w, r)
 }

@@ -20,6 +20,11 @@ func (app application) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/dashboard"), app.economicDashHandler)
 
+	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/inflation_expectation"), app.requirePermissions(economicPermission, app.inflationExpectation))
+	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/inflation"), app.requirePermissions(economicPermission, app.inflation))
+	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/nonfarm_payroll"), app.requirePermissions(economicPermission, app.nonfarmPayroll))
+	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/unemployment"), app.requirePermissions(economicPermission, app.unemployemnt))
+
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/durable_goods_orders"), app.requirePermissions(economicPermission, app.durableGoodsOrders))
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/federal_funds_rate"), app.requirePermissions(economicPermission, app.federalFundsRate))
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/real_gdp"), app.requirePermissions(economicPermission, app.realGdpDataByYears))

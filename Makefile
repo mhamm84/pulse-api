@@ -60,43 +60,39 @@ api/audit:
 .PHONY: api/build
 api/build: api/audit
 	@echo "Building pulse API..."
-	go build -o=./docker/bin/pulse ./cmd/pulse/
+	go build ./cmd/pulse/
 	GOOS=linux GOARCH=amd64 go build -o=./docker/bin/linux_amd64/pulse ./cmd/pulse/
 
 ## api/docker/build: build docker image for the pulse api
 .PHONY: api/docker/build
 api/docker/build: api/build
 	@echo "Building pulse API Docker Image"
-	docker build -t mhamm84/pulse-api ./docker
+	go mod vendor
+	docker-compose build
 
 ## pulse/up: create and start Pulse API containers
 .PHONY: pulse/up
 pulse/up: api/docker/build
 	@echo "Creating and starting Pulse API containers..."
-	cd docker ; \
-    	docker-compose up -d
-
+	docker-compose up -d
 
 ## pulse/start: start all docker containers
 .PHONY: pulse/start
 pulse/start:
 	@echo "Starting Pulse API stack..."
-	cd docker ; \
-    	docker-compose start
+	docker-compose start
 
 ## pulse/stop: stop all docker containers
 .PHONY: pulse/stop
 pulse/stop:
 	@echo "Stopping Pulse API stack..."
-	cd docker ; \
-    	docker-compose stop
+	docker-compose stop
 
 ## pulse/down: stop and remove all docker containers
 .PHONY: pulse/down
 pulse/down:
 	@echo "Stopping & removing Pulse API containers..."
-	cd docker ; \
-    	docker-compose down
+	docker-compose down
 
 ## integration/up: create & start integration test docker containers
 .PHONY: integration/up
