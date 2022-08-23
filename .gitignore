@@ -41,8 +41,10 @@
 .idea/**/dbnavigator.xml
 /docker/.env
 /.envrc
-/docker/bin/
+/docker-prev/bin/
 /testing/integration/economic/data/main/sql/
-/docker/bin/
+/docker-prev/bin/
 /docker/integration/.env
 /cmd/pulse/pulse
+/vendor/
+/pulse
