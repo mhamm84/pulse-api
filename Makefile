@@ -12,6 +12,28 @@ help:
 confirm:
 	@echo -n 'Are you sure? [y/N] ' && read ans && [ $${ans:-N} = y ]
 
+# ==================================================================================== #
+# QUALITY CONTROL
+# ==================================================================================== #
+## api/audit: tidy dependencies and format, vet and test all code
+.PHONY: api/audit
+api/audit:
+	@echo 'Tidying and verifying module dependencies...'
+	go mod tidy
+	go mod verify
+	@echo 'Formatting code...'
+	go fmt ./...
+	@echo 'Vetting code...'
+	go vet ./...
+	staticcheck ./...
+
+## api/build: build local go binary and linux_amd_64 binary
+.PHONY: api/build
+api/build: api/audit
+	@echo "Building pulse API..."
+	go build ./cmd/pulse/
+	GOOS=linux GOARCH=amd64 go build -o=./docker/bin/linux_amd64/pulse ./cmd/pulse/
+
 ## api/go/run: run the cmd/api application
 .PHONY: api/go/run
 api/go/run:
@@ -41,62 +63,40 @@ db/migrations/force:
 	@echo 'Running migration force for version: ${version}...'
 	migrate -path=./migrations -database=${PULSE_POSTGRES_FROM_HOST_DSN} force ${version}
 
-# ==================================================================================== #
-# QUALITY CONTROL
-# ==================================================================================== #
-## api/audit: tidy dependencies and format, vet and test all code
-.PHONY: api/audit
-api/audit:
-	@echo 'Tidying and verifying module dependencies...'
-	go mod tidy
-	go mod verify
-	@echo 'Formatting code...'
-	go fmt ./...
-	@echo 'Vetting code...'
-	go vet ./...
-	staticcheck ./...
-
-## api/build: build local go binary and linux_amd_64 binary
-.PHONY: api/build
-api/build: api/audit
-	@echo "Building pulse API..."
-	go build ./cmd/pulse/
-	GOOS=linux GOARCH=amd64 go build -o=./docker/bin/linux_amd64/pulse ./cmd/pulse/
-
-## api/docker/build: build docker image for the pulse api
-.PHONY: api/docker/build
-api/docker/build: api/build
-	@echo "Building pulse API Docker Image"
+## dev/docker/build: build docker image for the pulse api
+.PHONY: dev/docker/build
+dev/docker/build: api/build
+	@echo "Building dev Docker env"
 	go mod vendor
-	docker-compose build
+	docker-compose -f docker-compose-dev.yml build
 
-## pulse/up: create and start Pulse API containers
-.PHONY: pulse/up
-pulse/up: api/docker/build
+## dev/docker/up: create and start Pulse API containers for dev
+.PHONY: dev/docker/up
+dev/docker/up: dev/docker/build
 	@echo "Creating and starting Pulse API containers..."
-	docker-compose up -d
+	docker-compose -f docker-compose-dev.yml up -d
 
-## pulse/start: start all docker containers
-.PHONY: pulse/start
-pulse/start:
+## dev/docker/start: start all docker containers for dev
+.PHONY: dev/docker/start
+dev/docker/start:
 	@echo "Starting Pulse API stack..."
-	docker-compose start
+	docker-compose -f docker-compose-dev.yml start
 
-## pulse/stop: stop all docker containers
-.PHONY: pulse/stop
-pulse/stop:
+## dev/docker/stop: stop all docker containers
+.PHONY: dev/docker/stop
+dev/docker/stop:
 	@echo "Stopping Pulse API stack..."
-	docker-compose stop
+	docker-compose -f docker-compose-dev.yml stop
 
-## pulse/down: stop and remove all docker containers
-.PHONY: pulse/down
-pulse/down:
+## dev/pulse/down: stop and remove all docker containers
+.PHONY: dev/docker/down
+dev/docker/down:
 	@echo "Stopping & removing Pulse API containers..."
-	docker-compose down
+	docker-compose -f docker-compose-dev.yml down
 
 ## integration/up: create & start integration test docker containers
 .PHONY: integration/up
-integration/up: api/docker/build
+integration/up: dev/docker/build
 	@echo 'Spinning up docker containers for integration tests...'
 	cd docker/integration ; \
 		docker-compose up -d

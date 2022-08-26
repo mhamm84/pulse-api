@@ -1,4 +1,4 @@
-version: '3'
+version: '3.9'
 
 services:
 
@@ -9,7 +9,9 @@ services:
     container_name: pulse-api
     build:
       context: .
+      target: dev
       dockerfile: ./docker/app.dockerfile
+    image: mhamm84/pulse-api
     env_file: .env
     ports:
       - "9091:9091"
