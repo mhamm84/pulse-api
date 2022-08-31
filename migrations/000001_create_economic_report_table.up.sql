@@ -1,5 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS citext;
 CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
+CREATE EXTENSION IF NOT EXISTS timescaledb_toolkit;
 
 -- ####################################################################################################
 -- economic_report

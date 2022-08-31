@@ -20,6 +20,9 @@ func (app application) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/dashboard"), app.economicDashHandler)
 
+	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/cpi"), app.requirePermissions(economicPermission, app.cpiDataByYears))
+	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/cpi/stats"), app.cpiStats)
+
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/inflation_expectation"), app.requirePermissions(economicPermission, app.inflationExpectation))
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/inflation"), app.requirePermissions(economicPermission, app.inflation))
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/nonfarm_payroll"), app.requirePermissions(economicPermission, app.nonfarmPayroll))
@@ -29,7 +32,6 @@ func (app application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/federal_funds_rate"), app.requirePermissions(economicPermission, app.federalFundsRate))
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/real_gdp"), app.requirePermissions(economicPermission, app.realGdpDataByYears))
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/real_gdp_per_capita"), app.requirePermissions(economicPermission, app.realGdpPerCapitaDataByYears))
-	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/cpi"), app.requirePermissions(economicPermission, app.cpiDataByYears))
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/consumer_sentiment"), app.requirePermissions(economicPermission, app.consumerSentimentDataByYears))
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/retail_sales"), app.requirePermissions(economicPermission, app.retailSalesDataByYears))
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/treasury_yield/:maturity"), app.requirePermissions(economicPermission, app.treasuryYieldByYears))
@@ -37,6 +39,7 @@ func (app application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, WithVersion("/%s/users"), app.registerUserHandler)
 	router.HandlerFunc(http.MethodPut, WithVersion("/%s/users/activated"), app.activateUserHandler)
 
+	router.HandlerFunc(http.MethodPost, WithVersion("/%s/tokens/activation"), app.createActivationTokenHandler)
 	router.HandlerFunc(http.MethodPost, WithVersion("/%s/tokens/authentication"), app.createAuthenticationTokenHandler)
 
 	return app.recoverPanic(app.enableCORS(app.rateLimit(app.authenticate(router))))

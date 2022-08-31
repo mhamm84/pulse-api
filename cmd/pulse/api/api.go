@@ -10,6 +10,7 @@ import (
 	"github.com/mhamm84/pulse-api/internal/repo"
 	"github.com/mhamm84/pulse-api/internal/services"
 	"os"
+	"sync"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -20,6 +21,7 @@ type application struct {
 	logger   *jsonlog.Logger
 	services services.ServicesModel
 	mailer   *mailer.Mailer
+	wg       sync.WaitGroup
 }
 
 func StartApi(cfg *config.ApiConfig) {

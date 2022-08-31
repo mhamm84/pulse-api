@@ -46,11 +46,7 @@ const (
 	defaultRateBurst      = 4
 	defaultCors           = "http://localhost:9090"
 
-	defaultSmtpHost     = "smtp.mailtrap.io"
-	defaultSmtpPort     = 25
-	defaultSmtpUsername = "admin"
-	defaultSmtpPassword = "password"
-	defaultSmtpSender   = "youremail@service.com"
+	defaultSmtpPort = 25
 )
 
 var cfg config.ApiConfig

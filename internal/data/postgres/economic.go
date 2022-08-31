@@ -33,6 +33,73 @@ func (p *economicPG) LatestWithPercentChange(ctx context.Context, table string) 
 	return &res, nil
 }
 
+func (p *economicPG) GetStats(ctx context.Context, table string, years int, timeBucketDays int, paging data.Paging) (*data.EconomicStatsResult, error) {
+	select {
+	default:
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+
+	var res []data.EconomicStats
+
+	yearsParam := fmt.Sprintf("'%d year'", years)
+	// '365 days'::interval
+	timeBucketDaysParam := fmt.Sprintf("'%d days'::interval", timeBucketDays)
+
+	query := fmt.Sprintf(`
+		SELECT
+		    count(*) OVER(),
+    		min(time) as tMin,
+    		max(time) as tMax,
+    		stddev(value),
+    		mean(percentile_agg(value)),
+    		min(value),
+    		max(value)
+		FROM %s
+		WHERE time > NOW() - INTERVAL %s
+		GROUP BY time_bucket(%s, time)
+		ORDER BY tMax desc
+		LIMIT $1 OFFSET $2
+		`, table, yearsParam, timeBucketDaysParam,
+	)
+
+	args := []interface{}{paging.Limit(), paging.Offset()}
+
+	rows, err := p.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	totalRecords := 0
+
+	for rows.Next() {
+		var data data.EconomicStats
+		err := rows.Scan(
+			&totalRecords,
+			&data.StartDate,
+			&data.EndDate,
+			&data.Stddev,
+			&data.Mean,
+			&data.Min,
+			&data.Max,
+		)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, data)
+	}
+
+	meta := data.CalculateMetadata(totalRecords, paging.Page, paging.PageSize)
+	meta.Props = map[string]interface{}{
+		"years":          years,
+		"timeBucketDays": timeBucketDays,
+	}
+	return &data.EconomicStatsResult{
+		Data: &res,
+		Meta: &meta,
+	}, nil
+}
+
 func (p *economicPG) GetIntervalWithPercentChange(ctx context.Context, table string, years int, paging data.Paging) (*data.EconomicWithChangeResult, error) {
 	select {
 	default:

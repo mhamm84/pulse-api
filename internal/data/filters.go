@@ -26,11 +26,12 @@ func ValidatePaging(v *validator.Validator, p Paging) {
 }
 
 type Metadata struct {
-	CurrentPage  int `json:"current_page"`
-	PageSize     int `json:"page_size"`
-	FirstPage    int `json:"first_page"`
-	LastPage     int `json:"last_page"`
-	TotalRecords int `json:"total_records"`
+	CurrentPage  int                    `json:"current_page"`
+	PageSize     int                    `json:"page_size"`
+	FirstPage    int                    `json:"first_page"`
+	LastPage     int                    `json:"last_page"`
+	TotalRecords int                    `json:"total_records"`
+	Props        map[string]interface{} `json:"props"`
 }
 
 func CalculateMetadata(totalRecords, page, pageSize int) Metadata {

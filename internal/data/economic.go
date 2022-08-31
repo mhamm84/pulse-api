@@ -218,14 +218,29 @@ type EconomicWithChange struct {
 	Change decimal.Decimal `db:"percentage_change" json:"change"`
 }
 
+type EconomicStats struct {
+	StartDate time.Time       `db:"start_date" json:"from"`
+	EndDate   time.Time       `db:"end_date" json:"to"`
+	Stddev    decimal.Decimal `db:"stddev" json:"stddev"`
+	Mean      decimal.Decimal `db:"mean" json:"mean"`
+	Min       decimal.Decimal `db:"min" json:"min"`
+	Max       decimal.Decimal `db:"max" json:"max"`
+}
+
 type EconomicWithChangeResult struct {
 	Data *[]EconomicWithChange
+	Meta *Metadata
+}
+
+type EconomicStatsResult struct {
+	Data *[]EconomicStats
 	Meta *Metadata
 }
 
 type EconomicRepository interface {
 	LatestWithPercentChange(ctx context.Context, table string) (*EconomicWithChange, error)
 	GetIntervalWithPercentChange(ctx context.Context, table string, years int, paging Paging) (*EconomicWithChangeResult, error)
+	GetStats(ctx context.Context, table string, years int, timeBucketDays int, paging Paging) (*EconomicStatsResult, error)
 	GetAll(ctx context.Context, table string) (*[]Economic, error)
 	Insert(ctx context.Context, table string, data *Economic) error
 	InsertMany(ctx context.Context, table string, data *[]Economic) error

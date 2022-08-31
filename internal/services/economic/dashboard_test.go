@@ -38,6 +38,10 @@ func (w *MockEconomicRepository) InsertMany(ctx context.Context, table string, d
 	return nil
 }
 
+func (w *MockEconomicRepository) GetStats(ctx context.Context, table string, years int, timeBucketDays int, paging data.Paging) (*data.EconomicStatsResult, error) {
+	return nil, nil
+}
+
 func TestDashboardService_GetDashboardSummary(t *testing.T) {
 
 	ctx := context.Background()
