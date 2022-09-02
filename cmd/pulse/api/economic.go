@@ -20,32 +20,63 @@ func (app *application) inflationExpectation(w http.ResponseWriter, r *http.Requ
 	getEconomicDataByYears(r.Context(), app, data.InflationExpectation, w, r)
 }
 
+func (app *application) inflationExpectationStats(w http.ResponseWriter, r *http.Request) {
+	getStats(r.Context(), app, data.InflationExpectation, w, r)
+}
+
 func (app *application) inflation(w http.ResponseWriter, r *http.Request) {
 	getEconomicDataByYears(r.Context(), app, data.Inflation, w, r)
 }
 
+func (app *application) inflationStats(w http.ResponseWriter, r *http.Request) {
+	getStats(r.Context(), app, data.Inflation, w, r)
+}
+
 func (app *application) nonfarmPayroll(w http.ResponseWriter, r *http.Request) {
 	getEconomicDataByYears(r.Context(), app, data.NonfarmPayroll, w, r)
+}
+func (app *application) nonfarmPayrollStats(w http.ResponseWriter, r *http.Request) {
+	getStats(r.Context(), app, data.NonfarmPayroll, w, r)
 }
 
 func (app *application) unemployemnt(w http.ResponseWriter, r *http.Request) {
 	getEconomicDataByYears(r.Context(), app, data.Unemployment, w, r)
 }
 
+func (app *application) unemployemntStats(w http.ResponseWriter, r *http.Request) {
+	getStats(r.Context(), app, data.Unemployment, w, r)
+}
+
 func (app *application) durableGoodsOrders(w http.ResponseWriter, r *http.Request) {
 	getEconomicDataByYears(r.Context(), app, data.DurableGoodsOrders, w, r)
+}
+
+func (app *application) durableGoodsOrdersStats(w http.ResponseWriter, r *http.Request) {
+	getStats(r.Context(), app, data.DurableGoodsOrders, w, r)
 }
 
 func (app *application) federalFundsRate(w http.ResponseWriter, r *http.Request) {
 	getEconomicDataByYears(r.Context(), app, data.FederalFundsRate, w, r)
 }
 
+func (app *application) federalFundsRateStats(w http.ResponseWriter, r *http.Request) {
+	getStats(r.Context(), app, data.FederalFundsRate, w, r)
+}
+
 func (app *application) realGdpPerCapitaDataByYears(w http.ResponseWriter, r *http.Request) {
 	getEconomicDataByYears(r.Context(), app, data.RealGdpPerCapita, w, r)
 }
 
+func (app *application) realGdpPerCapitaStats(w http.ResponseWriter, r *http.Request) {
+	getStats(r.Context(), app, data.RealGdpPerCapita, w, r)
+}
+
 func (app *application) realGdpDataByYears(w http.ResponseWriter, r *http.Request) {
 	getEconomicDataByYears(r.Context(), app, data.RealGDP, w, r)
+}
+
+func (app *application) realGdpDataByYearsStats(w http.ResponseWriter, r *http.Request) {
+	getStats(r.Context(), app, data.RealGDP, w, r)
 }
 
 //###############################################################################################
@@ -66,11 +97,33 @@ func (app *application) consumerSentimentDataByYears(w http.ResponseWriter, r *h
 	getEconomicDataByYears(r.Context(), app, data.ConsumerSentiment, w, r)
 }
 
+func (app *application) consumerSentimentStats(w http.ResponseWriter, r *http.Request) {
+	getStats(r.Context(), app, data.ConsumerSentiment, w, r)
+}
+
 func (app *application) retailSalesDataByYears(w http.ResponseWriter, r *http.Request) {
 	getEconomicDataByYears(r.Context(), app, data.RetailSales, w, r)
 }
 
+func (app *application) retailSalesDataByYearsStats(w http.ResponseWriter, r *http.Request) {
+	getStats(r.Context(), app, data.RetailSales, w, r)
+}
+
 func (app *application) treasuryYieldByYears(w http.ResponseWriter, r *http.Request) {
+	reportType := reportTypeByTreasuryMaturity(w, r, app)
+	if reportType != nil {
+		getEconomicDataByYears(r.Context(), app, *reportType, w, r)
+	}
+}
+
+func (app *application) treasuryYieldByYearsStats(w http.ResponseWriter, r *http.Request) {
+	reportType := reportTypeByTreasuryMaturity(w, r, app)
+	if reportType != nil {
+		getStats(r.Context(), app, *reportType, w, r)
+	}
+}
+
+func reportTypeByTreasuryMaturity(w http.ResponseWriter, r *http.Request, app *application) *data.ReportType {
 	params := httprouter.ParamsFromContext(r.Context())
 
 	maturity := params.ByName("maturity")
@@ -80,9 +133,9 @@ func (app *application) treasuryYieldByYears(w http.ResponseWriter, r *http.Requ
 			"maturity": maturity,
 		})
 		app.badRequestResponse(w, r)
-		return
+		return nil
 	}
-	getEconomicDataByYears(r.Context(), app, reportType, w, r)
+	return &reportType
 }
 
 func getStats(ctx context.Context, app *application, report data.ReportType, w http.ResponseWriter, r *http.Request) {
