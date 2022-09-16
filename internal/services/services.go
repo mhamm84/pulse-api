@@ -9,6 +9,7 @@ import (
 	"github.com/mhamm84/pulse-api/internal/services/economic"
 	"github.com/mhamm84/pulse-api/internal/services/economic/alpha"
 	"golang.org/x/time/rate"
+	"sync"
 	"time"
 )
 
@@ -44,8 +45,8 @@ func NewServicesModel(models repo.Models, client alpha.ClientInterface, mailer *
 
 type EconomicService interface {
 	GetAll(reportType data.ReportType) (*[]data.Economic, error)
-	GetIntervalWithPercentChange(ctx context.Context, dataChan chan data.EconomicWithChangeResult, errChan chan error, reportType data.ReportType, years int, paging data.Paging)
-	GetStats(ctx context.Context, dataChan chan data.EconomicStatsResult, errChan chan error, reportType data.ReportType, years int, timeBucket int, paging data.Paging)
+	GetIntervalWithPercentChange(ctx context.Context, wg *sync.WaitGroup, dataChan chan data.EconomicWithChangeResult, errChan chan error, reportType data.ReportType, years int, paging data.Paging)
+	GetStats(ctx context.Context, wg *sync.WaitGroup, dataChan chan data.EconomicStatsResult, errChan chan error, reportType data.ReportType, years int, timeBucket int, paging data.Paging)
 	StartDataSyncTask()
 }
 

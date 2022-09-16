@@ -24,16 +24,16 @@ func (app application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/cpi/stats"), app.requirePermissions(economicPermission, app.cpiStats))
 
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/inflation_expectation"), app.requirePermissions(economicPermission, app.inflationExpectation))
-	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/inflation_expectation/stats"), app.requirePermissions(economicPermission, app.cpiStats))
+	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/inflation_expectation/stats"), app.requirePermissions(economicPermission, app.inflationExpectationStats))
 
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/inflation"), app.requirePermissions(economicPermission, app.inflation))
-	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/inflation/stats"), app.requirePermissions(economicPermission, app.cpiStats))
+	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/inflation/stats"), app.requirePermissions(economicPermission, app.inflationStats))
 
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/nonfarm_payroll"), app.requirePermissions(economicPermission, app.nonfarmPayroll))
-	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/nonfarm_payroll/stats"), app.requirePermissions(economicPermission, app.cpiStats))
+	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/nonfarm_payroll/stats"), app.requirePermissions(economicPermission, app.nonfarmPayrollStats))
 
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/unemployment"), app.requirePermissions(economicPermission, app.unemployemnt))
-	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/unemployment/stats"), app.requirePermissions(economicPermission, app.cpiStats))
+	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/unemployment/stats"), app.requirePermissions(economicPermission, app.unemployemntStats))
 
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/durable_goods_orders"), app.requirePermissions(economicPermission, app.durableGoodsOrders))
 	router.HandlerFunc(http.MethodGet, WithVersion("/%s/economic/durable_goods_orders/stats"), app.requirePermissions(economicPermission, app.durableGoodsOrdersStats))

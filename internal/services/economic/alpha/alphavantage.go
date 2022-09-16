@@ -15,6 +15,7 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -82,7 +83,8 @@ type AlphaVantageLimiter struct {
 	DailyLimiter  *rate.Limiter
 }
 
-func (s AlphaVantageEconomicService) GetStats(ctx context.Context, dataChan chan data.EconomicStatsResult, errChan chan error, reportType data.ReportType, years int, timeBucketDays int, paging data.Paging) {
+func (s AlphaVantageEconomicService) GetStats(ctx context.Context, wg *sync.WaitGroup, dataChan chan data.EconomicStatsResult, errChan chan error, reportType data.ReportType, years int, timeBucketDays int, paging data.Paging) {
+	defer wg.Done()
 	data, err := s.EconomicRepository.GetStats(ctx, data.TableFromReportType(reportType), years, timeBucketDays, paging)
 	if err != nil {
 		errChan <- err
@@ -91,7 +93,8 @@ func (s AlphaVantageEconomicService) GetStats(ctx context.Context, dataChan chan
 	}
 }
 
-func (s AlphaVantageEconomicService) GetIntervalWithPercentChange(ctx context.Context, dataChan chan data.EconomicWithChangeResult, errChan chan error, reportType data.ReportType, years int, paging data.Paging) {
+func (s AlphaVantageEconomicService) GetIntervalWithPercentChange(ctx context.Context, wg *sync.WaitGroup, dataChan chan data.EconomicWithChangeResult, errChan chan error, reportType data.ReportType, years int, paging data.Paging) {
+	defer wg.Done()
 	data, err := s.EconomicRepository.GetIntervalWithPercentChange(ctx, data.TableFromReportType(reportType), years, paging)
 	if err != nil {
 		errChan <- err

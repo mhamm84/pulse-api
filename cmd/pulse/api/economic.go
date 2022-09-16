@@ -7,6 +7,7 @@ import (
 	"github.com/mhamm84/pulse-api/internal/data"
 	"github.com/mhamm84/pulse-api/internal/validator"
 	"net/http"
+	"sync"
 )
 
 const (
@@ -79,9 +80,9 @@ func (app *application) realGdpDataByYearsStats(w http.ResponseWriter, r *http.R
 	getStats(r.Context(), app, data.RealGDP, w, r)
 }
 
-//###############################################################################################
+// ###############################################################################################
 // CPI
-//###############################################################################################
+// ###############################################################################################
 func (app *application) cpiDataByYears(w http.ResponseWriter, r *http.Request) {
 	getEconomicDataByYears(r.Context(), app, data.CPI, w, r)
 }
@@ -90,9 +91,9 @@ func (app *application) cpiStats(w http.ResponseWriter, r *http.Request) {
 	getStats(r.Context(), app, data.CPI, w, r)
 }
 
-//###############################################################################################
+// ###############################################################################################
 // Consumer Sentiment
-//###############################################################################################
+// ###############################################################################################
 func (app *application) consumerSentimentDataByYears(w http.ResponseWriter, r *http.Request) {
 	getEconomicDataByYears(r.Context(), app, data.ConsumerSentiment, w, r)
 }
@@ -154,7 +155,7 @@ func getStats(ctx context.Context, app *application, report data.ReportType, w h
 	input.TimeBucketDays = timeBucketDays
 	page := app.readInt(qs, pageParam, 1, v)
 	input.Paging.Page = page
-	pageSize := app.readInt(qs, pageSizeParam, 10, v)
+	pageSize := app.readInt(qs, pageSizeParam, 12, v)
 	input.Paging.PageSize = pageSize
 
 	data.ValidatePaging(v, input.Paging)
@@ -163,10 +164,12 @@ func getStats(ctx context.Context, app *application, report data.ReportType, w h
 		app.failedValidationResponse(w, r, v.Errors)
 	}
 
+	wg := new(sync.WaitGroup)
+	wg.Add(1)
 	dataChan := make(chan data.EconomicStatsResult)
 	errChan := make(chan error)
 
-	go app.services.AlphaVantageEconomicService.GetStats(r.Context(), dataChan, errChan, report, years, timeBucketDays, input.Paging)
+	go app.services.AlphaVantageEconomicService.GetStats(r.Context(), wg, dataChan, errChan, report, years, timeBucketDays, input.Paging)
 
 	select {
 	case data := <-dataChan:
@@ -209,7 +212,7 @@ func getEconomicDataByYears(ctx context.Context, app *application, report data.R
 
 	page := app.readInt(qs, pageParam, 1, v)
 	input.Paging.Page = page
-	pageSize := app.readInt(qs, pageSizeParam, 10, v)
+	pageSize := app.readInt(qs, pageSizeParam, 12, v)
 	input.Paging.PageSize = pageSize
 
 	data.ValidatePaging(v, input.Paging)
@@ -220,29 +223,40 @@ func getEconomicDataByYears(ctx context.Context, app *application, report data.R
 	}
 
 	dataChan := make(chan data.EconomicWithChangeResult)
+	statsChan := make(chan data.EconomicStatsResult)
 	errChan := make(chan error)
 
-	go app.services.AlphaVantageEconomicService.GetIntervalWithPercentChange(r.Context(), dataChan, errChan, report, years, input.Paging)
+	wg := new(sync.WaitGroup)
+	wg.Add(2)
 
-	select {
-	case data := <-dataChan:
-		err := app.WriteJson(w, http.StatusOK, envelope{
-			"data": data.Data,
-			"meta": data.Meta,
-		}, nil)
+	go app.services.AlphaVantageEconomicService.GetIntervalWithPercentChange(r.Context(), wg, dataChan, errChan, report, years, input.Paging)
+	go app.services.AlphaVantageEconomicService.GetStats(r.Context(), wg, statsChan, errChan, report, years, 365, input.Paging)
 
-		if err != nil {
-			app.logger.PrintError(err, nil)
-			app.serverErrorResponse(w, r, err)
-		}
-		return
-	case err := <-errChan:
+	envelope := envelope{}
+
+	go func() {
+		wg.Wait()
+		close(dataChan)
+		close(statsChan)
+		close(errChan)
+	}()
+
+	data := <-dataChan
+	envelope["data"] = data.Data
+	envelope["meta"] = data.Meta
+
+	stats := <-statsChan
+	envelope["stats"] = stats.Data
+
+	for err := range errChan {
 		app.logger.PrintError(err, nil)
 		app.serverErrorResponse(w, r, err)
 		return
-	case <-ctx.Done():
-		app.logger.PrintError(ctx.Err(), nil)
-		app.serverErrorResponse(w, r, ctx.Err())
-		return
+	}
+
+	err := app.WriteJson(w, http.StatusOK, envelope, nil)
+	if err != nil {
+		app.logger.PrintError(err, nil)
+		app.serverErrorResponse(w, r, err)
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/golang-migrate/migrate"
 	"github.com/jmoiron/sqlx"
-	"io/ioutil"
 	"os"
 )
 
@@ -20,7 +19,7 @@ var TestingConfig = Config{
 }
 
 func (c *Config) InsertTestData() error {
-	files, err := ioutil.ReadDir("../sql")
+	files, err := os.ReadDir("../sql")
 	if err != nil {
 		return err
 	}

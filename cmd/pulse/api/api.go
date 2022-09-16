@@ -21,7 +21,7 @@ type application struct {
 	logger   *jsonlog.Logger
 	services services.ServicesModel
 	mailer   *mailer.Mailer
-	wg       sync.WaitGroup
+	wg       *sync.WaitGroup
 }
 
 func StartApi(cfg *config.ApiConfig) {

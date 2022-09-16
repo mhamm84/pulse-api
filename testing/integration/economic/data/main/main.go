@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	_ "github.com/lib/pq"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -33,7 +32,7 @@ func main() {
 		}
 	}
 
-	files, err := ioutil.ReadDir("../")
+	files, err := os.ReadDir("../")
 	if err != nil {
 		panic(err)
 	}
@@ -45,7 +44,7 @@ func main() {
 
 	for _, f := range files {
 		if !f.IsDir() && strings.HasSuffix(f.Name(), ".json") {
-			fileData, err := ioutil.ReadFile(inputFilePath + f.Name())
+			fileData, err := os.ReadFile(inputFilePath + f.Name())
 			if err != nil {
 				panic(err)
 			}
