@@ -116,6 +116,6 @@ integration/down:
 
 ## unit/tests/run: run all unit tests
 .PHONY: unit/tests/run
-unit-tests: api/audit
+unit/tests/run: api/audit
 	@echo 'Running unit tests...'
 	go test -v -race ./...
