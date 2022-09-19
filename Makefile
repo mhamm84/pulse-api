@@ -88,7 +88,7 @@ dev/docker/stop:
 	@echo "Stopping Pulse API stack..."
 	docker-compose -f docker-compose-dev.yml stop
 
-## dev/pulse/down: stop and remove all docker containers
+## dev/docker/down: stop and remove all docker containers
 .PHONY: dev/docker/down
 dev/docker/down:
 	@echo "Stopping & removing Pulse API containers..."
