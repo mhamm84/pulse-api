@@ -1,6 +1,7 @@
 package config
 
 type ApiConfig struct {
+	Host         string
 	Port         int
 	Env          string
 	DB           DbConfig

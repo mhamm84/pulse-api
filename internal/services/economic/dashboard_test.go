@@ -3,12 +3,10 @@ package economic
 import (
 	"context"
 	"github.com/mhamm84/pulse-api/internal/data"
-	"github.com/mhamm84/pulse-api/internal/jsonlog"
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"os"
 	"testing"
 	"time"
 )
@@ -50,7 +48,6 @@ func TestDashboardService_GetDashboardSummary(t *testing.T) {
 	value := decimal.NewFromFloat(100.00)
 	change := decimal.NewFromFloat(10.00)
 	slug := "cpi"
-	logging := jsonlog.New(os.Stdout, jsonlog.LevelDebug)
 
 	t.Run("createDashSummary", func(t *testing.T) {
 		mockRepo := new(MockEconomicRepository)
@@ -60,7 +57,7 @@ func TestDashboardService_GetDashboardSummary(t *testing.T) {
 			Change: change,
 		}, nil).Once()
 
-		res := createDashSummary(ctx, logging, mockRepo, slug, dashName, nil)
+		res := createDashSummary(ctx, mockRepo, slug, dashName, nil)
 		mockRepo.AssertExpectations(t)
 
 		assert.Equal(t, dashName, res.Name)
@@ -76,14 +73,13 @@ func TestDashboardService_GetDashboardSummary_Error(t *testing.T) {
 	ctx := context.Background()
 	dashName := "cpi-dash"
 	slug := "cpi"
-	logging := jsonlog.New(os.Stdout, jsonlog.LevelDebug)
 	error := errors.New("LatestWithPercentChange error")
 
 	t.Run("createDashSummary", func(t *testing.T) {
 		mockRepo := new(MockEconomicRepository)
 		mockRepo.On("LatestWithPercentChange", mock.Anything, slug).Return(nil, error).Once()
 
-		res := createDashSummary(ctx, logging, mockRepo, slug, dashName, nil)
+		res := createDashSummary(ctx, mockRepo, slug, dashName, nil)
 		mockRepo.AssertExpectations(t)
 
 		assert.Nil(t, res)

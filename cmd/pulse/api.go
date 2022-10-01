@@ -13,6 +13,7 @@ import (
 const (
 	version            = "1.0.0"
 	logLevel           = "log-level"
+	host               = "host"
 	port               = "port"
 	env                = "env"
 	dbDsn              = "db-dsn"
@@ -63,6 +64,7 @@ func RunApiCmd() *cobra.Command {
 
 	// Parse arguments passed in on startup
 	runCmd.Flags().StringVar(&cfg.LogLevel, logLevel, "INFO", "logging level [DEBUG,INFO,WARNING,ERROR,FATAL]")
+	runCmd.Flags().StringVar(&cfg.Host, host, "localhost", "Swap Shop API hostname")
 	runCmd.Flags().IntVar(&cfg.Port, port, defaultPort, "Pulse API port number")
 	runCmd.Flags().StringVar(&cfg.Env, env, dev, fmt.Sprintf("%s|%s|%s|%s", dev, staging, uat, production))
 

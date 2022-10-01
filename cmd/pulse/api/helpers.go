@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/mhamm84/pulse-api/internal/utils"
 	"github.com/mhamm84/pulse-api/internal/validator"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"net/url"
@@ -111,7 +113,9 @@ func (app *application) background(fn func()) {
 
 		defer func() {
 			if err := recover(); err != nil {
-				app.logger.PrintError(fmt.Errorf("%s", err), nil)
+				utils.Logger.Error("error in background thread",
+					zap.Error(fmt.Errorf("%s", err)),
+				)
 			}
 		}()
 

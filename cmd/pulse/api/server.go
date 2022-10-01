@@ -3,7 +3,9 @@ package api
 import (
 	"context"
 	"fmt"
+	"github.com/mhamm84/pulse-api/internal/utils"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 	"net/http"
 	"os"
 	"os/signal"
@@ -27,9 +29,9 @@ func (app *application) serve() error {
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 		s := <-quit
 
-		app.logger.PrintInfo("signal caught", map[string]interface{}{
-			"signal": s.String(),
-		})
+		utils.Logger.Info("signal caught",
+			zap.String("signal", s.String()),
+		)
 
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
@@ -38,9 +40,9 @@ func (app *application) serve() error {
 		if err != nil {
 			shutdownError <- err
 		}
-		app.logger.PrintInfo("completing background tasks...", map[string]interface{}{
-			"addr": srv.Addr,
-		})
+		utils.Logger.Info("completing background tasks...",
+			zap.String("addr", srv.Addr),
+		)
 		app.wg.Wait()
 		shutdownError <- nil
 	}()
@@ -55,10 +57,10 @@ func (app *application) serve() error {
 		return err
 	}
 
-	app.logger.PrintInfo("stopped Pulse server", map[string]interface{}{
-		"addr": srv.Addr,
-		"env":  app.cfg.Env,
-	})
+	utils.Logger.Info("stopped Pulse server",
+		zap.String("addr", srv.Addr),
+		zap.String("env", app.cfg.Env),
+	)
 
 	return nil
 }

@@ -2,11 +2,16 @@ package api
 
 import (
 	"fmt"
+	"github.com/mhamm84/pulse-api/internal/utils"
+	"go.uber.org/zap"
 	"net/http"
 )
 
 func (app *application) logError(r *http.Request, err error) {
-	app.logger.PrintError(err, nil)
+	utils.Logger.Error("application error",
+		zap.Error(err),
+		zap.Any("request", &r),
+	)
 }
 
 func (app *application) errorResponse(w http.ResponseWriter, r *http.Request, status int, message interface{}) {

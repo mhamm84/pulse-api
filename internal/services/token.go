@@ -2,7 +2,6 @@ package services
 
 import (
 	"github.com/mhamm84/pulse-api/internal/data"
-	"github.com/mhamm84/pulse-api/internal/jsonlog"
 	"github.com/mhamm84/pulse-api/internal/validator"
 	"time"
 )
@@ -13,11 +12,10 @@ const (
 
 type tokenService struct {
 	TokenRepository data.TokenRepository
-	Logger          *jsonlog.Logger
 }
 
-func NewTokenService(tokenRepo data.TokenRepository, logger *jsonlog.Logger) TokenService {
-	return &tokenService{tokenRepo, logger}
+func NewTokenService(tokenRepo data.TokenRepository) TokenService {
+	return &tokenService{tokenRepo}
 }
 
 func (s *tokenService) DeleteAllForUser(userId int64, scope string) error {

@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"github.com/mhamm84/pulse-api/internal/data"
 	"github.com/mhamm84/pulse-api/internal/services"
+	"github.com/mhamm84/pulse-api/internal/utils"
 	"github.com/mhamm84/pulse-api/internal/validator"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 	"golang.org/x/time/rate"
 	"net"
 	"net/http"
@@ -19,20 +21,18 @@ const AuthorizationHeader = "Authorization"
 func (app *application) requirePermissions(code string, next http.HandlerFunc) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		user := app.contextGetUser(r)
-
-		app.logger.PrintInfo("requirePermissions code", map[string]interface{}{
-			"code": code,
-		})
+		utils.Logger.Info("requirePermissions",
+			zap.String("code", code),
+		)
 		permissions, err := app.services.PermissionsService.GetAllForUser(user.ID)
 		if err != nil {
 			app.serverErrorResponse(w, r, err)
 			return
 		}
-		app.logger.PrintInfo("permissions found", map[string]interface{}{
-			"user.ID":     user.ID,
-			"permissions": permissions,
-		})
-
+		utils.Logger.Info("requirePermissions",
+			zap.String("user.ID", code),
+			zap.Any("permissions", permissions),
+		)
 		if !permissions.Included(code) {
 			app.notPermittedResponse(w, r)
 			return
