@@ -13,7 +13,9 @@ WORKDIR /pulse-api
 ADD . .
 
 EXPOSE 9091 9091
-ENTRYPOINT CompileDaemon -build "go build -mod=vendor ./cmd/pulse/" -command="./pulse run-api" -polling
+#ENTRYPOINT CompileDaemon -build "go build -mod=vendor ./cmd/pulse/" -command="./pulse run-api" -polling
+ENTRYPOINT CompileDaemon -build "go build ./cmd/pulse/" -command="./pulse run-api" -polling
+
 
 ##########################################################
 # Prepare a build container with all dependencies inside #
@@ -23,7 +25,8 @@ FROM env as builder
 WORKDIR /pulse-api
 ADD . .
 
-RUN go build -o /go/bin/pulse -mod=vendor ./cmd/pulse/
+#RUN go build -o /go/bin/pulse -mod=vendor ./cmd/pulse/
+RUN go build -o /go/bin/pulse ./cmd/pulse/
 
 ###########################################
 # Create clean container with binary only #

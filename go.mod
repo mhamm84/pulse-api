@@ -2,7 +2,7 @@ module github.com/mhamm84/pulse-api
 
 go 1.18
 
-replace github.com/mhamm84/gofinance-alpha => ../../gofinance/gofinance-alpha
+// replace github.com/mhamm84/gofinance-alpha => ../../gofinance/gofinance-alpha
 
 require (
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be
@@ -11,7 +11,6 @@ require (
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/lib/pq v1.10.6
-	github.com/mhamm84/gofinance-alpha v0.0.0
 	github.com/pkg/errors v0.9.1
 	github.com/shopspring/decimal v1.3.1
 	github.com/spf13/cobra v1.5.0
@@ -23,6 +22,8 @@ require (
 )
 
 require github.com/google/uuid v1.3.0
+
+require github.com/mhamm84/gofinance-alpha v0.0.0-20220823160652-988b7e17a0a7
 
 require (
 	github.com/Microsoft/go-winio v0.5.2 // indirect
