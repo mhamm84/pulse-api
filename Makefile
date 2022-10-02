@@ -67,7 +67,7 @@ db/migrations/force:
 .PHONY: dev/docker/build
 dev/docker/build: api/build
 	@echo "Building dev Docker env"
-	go mod vendor
+	#go mod vendor
 	docker-compose -f docker-compose-dev.yml build
 
 ## dev/docker/up: create and start Pulse API containers for dev
