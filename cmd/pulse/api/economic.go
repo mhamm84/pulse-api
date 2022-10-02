@@ -133,7 +133,7 @@ func reportTypeByTreasuryMaturity(w http.ResponseWriter, r *http.Request, app *a
 	reportType := data.ReportTypeTreasuryYieldMaturity(maturity)
 	if reportType == data.Unknown {
 		msg := "Unknown maturity to get treasury yield data"
-		utils.Logger.Info(msg, zap.String("maturity", maturity))
+		utils.Logger(r.Context()).Info(msg, zap.String("maturity", maturity))
 		app.badRequestResponse(w, r)
 		return nil
 	}
@@ -179,16 +179,16 @@ func getStats(ctx context.Context, app *application, report data.ReportType, w h
 			"meta": data.Meta,
 		}, nil)
 		if err != nil {
-			utils.Logger.Error("getStats error writing json", zap.Error(err))
+			utils.Logger(r.Context()).Error("getStats error writing json", zap.Error(err))
 			app.serverErrorResponse(w, r, err)
 		}
 		return
 	case err := <-errChan:
-		utils.Logger.Error("getStats context has error", zap.Error(err))
+		utils.Logger(r.Context()).Error("getStats context has error", zap.Error(err))
 		app.serverErrorResponse(w, r, err)
 		return
 	case <-ctx.Done():
-		utils.Logger.Error("getStats context id done", zap.Error(ctx.Err()))
+		utils.Logger(r.Context()).Error("getStats context id done", zap.Error(ctx.Err()))
 		app.serverErrorResponse(w, r, ctx.Err())
 		return
 	}
@@ -250,14 +250,14 @@ func getEconomicDataByYears(ctx context.Context, app *application, report data.R
 	envelope["stats"] = stats.Data
 
 	for err := range errChan {
-		utils.Logger.Error("getEconomicDataByYears channel error getting data", zap.Error(err))
+		utils.Logger(r.Context()).Error("getEconomicDataByYears channel error getting data", zap.Error(err))
 		app.serverErrorResponse(w, r, err)
 		return
 	}
 
 	err := app.WriteJson(w, http.StatusOK, envelope, nil)
 	if err != nil {
-		utils.Logger.Error("getEconomicDataByYears error writing json", zap.Error(err))
+		utils.Logger(r.Context()).Error("getEconomicDataByYears error writing json", zap.Error(err))
 		app.serverErrorResponse(w, r, err)
 	}
 }

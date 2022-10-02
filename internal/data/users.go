@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"github.com/mhamm84/pulse-api/internal/validator"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -83,8 +84,8 @@ func ValidateUser(v *validator.Validator, user *User) {
 }
 
 type UserRepository interface {
-	Insert(user *User) error
-	Update(user *User) error
-	GetByEmail(email string) (*User, error)
-	GetFromToken(tokenScope, tokenplaintext string) (*User, error)
+	Insert(ctx context.Context, user *User) error
+	Update(ctx context.Context, user *User) error
+	GetByEmail(ctx context.Context, email string) (*User, error)
+	GetFromToken(ctx context.Context, tokenScope, tokenplaintext string) (*User, error)
 }

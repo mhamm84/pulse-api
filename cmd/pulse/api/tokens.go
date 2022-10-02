@@ -26,7 +26,7 @@ func (app *application) createActivationTokenHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	user, err := app.services.UserService.GetByEmail(input.Email)
+	user, err := app.services.UserService.GetByEmail(r.Context(), input.Email)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -45,7 +45,7 @@ func (app *application) createActivationTokenHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	token, err := app.services.TokenService.New(user.ID, 3*24*time.Hour, data.ScopeActivation)
+	token, err := app.services.TokenService.New(r.Context(), user.ID, 3*24*time.Hour, data.ScopeActivation)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
@@ -88,7 +88,7 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 		return
 	}
 
-	user, err := app.services.UserService.GetByEmail(input.Email)
+	user, err := app.services.UserService.GetByEmail(r.Context(), input.Email)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -110,7 +110,7 @@ func (app *application) createAuthenticationTokenHandler(w http.ResponseWriter, 
 		return
 	}
 
-	token, err := app.services.TokenService.New(user.ID, 24*time.Hour, data.ScopeAuthentication)
+	token, err := app.services.TokenService.New(r.Context(), user.ID, 24*time.Hour, data.ScopeAuthentication)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return

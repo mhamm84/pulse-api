@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"github.com/mhamm84/pulse-api/internal/data"
 )
 
@@ -12,6 +13,6 @@ func NewPermissionsService(permissionRepo data.PermissionsRepository) Permission
 	return &permissionsService{permissionRepo}
 }
 
-func (s *permissionsService) GetAllForUser(userId int64) (data.Permissions, error) {
+func (s *permissionsService) GetAllForUser(ctx context.Context, userId int64) (data.Permissions, error) {
 	return s.PermissionsRepository.GetAllForUser(userId)
 }

@@ -53,17 +53,17 @@ type EconomicDashboardService interface {
 }
 
 type UserService interface {
-	RegisterUser(user *data.User) error
-	ActivateUser(token string) (*data.User, error)
-	GetByEmail(email string) (*data.User, error)
-	GetFromToken(tokenScope, tokenplaintext string) (*data.User, error)
+	RegisterUser(ctx context.Context, user *data.User) error
+	ActivateUser(ctx context.Context, token string) (*data.User, error)
+	GetByEmail(ctx context.Context, email string) (*data.User, error)
+	GetFromToken(ctx context.Context, tokenScope, tokenplaintext string) (*data.User, error)
 }
 
 type PermissionsService interface {
-	GetAllForUser(userId int64) (data.Permissions, error)
+	GetAllForUser(ctx context.Context, userId int64) (data.Permissions, error)
 }
 
 type TokenService interface {
-	New(userID int64, ttl time.Duration, scope string) (*data.Token, error)
-	DeleteAllForUser(userId int64, scope string) error
+	New(ctx context.Context, userID int64, ttl time.Duration, scope string) (*data.Token, error)
+	DeleteAllForUser(ctx context.Context, userId int64, scope string) error
 }

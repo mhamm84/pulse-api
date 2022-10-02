@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"github.com/mhamm84/pulse-api/internal/data"
 	"github.com/mhamm84/pulse-api/internal/validator"
 	"time"
@@ -18,17 +19,17 @@ func NewTokenService(tokenRepo data.TokenRepository) TokenService {
 	return &tokenService{tokenRepo}
 }
 
-func (s *tokenService) DeleteAllForUser(userId int64, scope string) error {
-	return s.TokenRepository.DeleteAllForUser(userId, scope)
+func (s *tokenService) DeleteAllForUser(ctx context.Context, userId int64, scope string) error {
+	return s.TokenRepository.DeleteAllForUser(ctx, userId, scope)
 }
 
-func (s *tokenService) New(userID int64, ttl time.Duration, scope string) (*data.Token, error) {
-	token, err := data.GenerateToken(userID, ttl, scope)
+func (s *tokenService) New(ctx context.Context, userID int64, ttl time.Duration, scope string) (*data.Token, error) {
+	token, err := data.GenerateToken(ctx, userID, ttl, scope)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.TokenRepository.Insert(token)
+	err = s.TokenRepository.Insert(ctx, token)
 	if err != nil {
 		return nil, err
 	}

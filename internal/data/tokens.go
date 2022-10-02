@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base32"
@@ -20,7 +21,7 @@ type Token struct {
 	Scope     string    `json:"-" db:"scope"`
 }
 
-func GenerateToken(userId int64, ttl time.Duration, scope string) (*Token, error) {
+func GenerateToken(ctx context.Context, userId int64, ttl time.Duration, scope string) (*Token, error) {
 	token := &Token{
 		UserId: userId,
 		Expiry: time.Now().Add(ttl),
@@ -41,6 +42,6 @@ func GenerateToken(userId int64, ttl time.Duration, scope string) (*Token, error
 }
 
 type TokenRepository interface {
-	Insert(token *Token) error
-	DeleteAllForUser(userId int64, scope string) error
+	Insert(ctx context.Context, token *Token) error
+	DeleteAllForUser(ctx context.Context, userId int64, scope string) error
 }

@@ -20,7 +20,7 @@ func NewUserRepository(db *sqlx.DB) data.UserRepository {
 	return &userpg{db: db}
 }
 
-func (p *userpg) GetFromToken(tokenScope, tokenplaintext string) (*data.User, error) {
+func (p *userpg) GetFromToken(ctx context.Context, tokenScope, tokenplaintext string) (*data.User, error) {
 
 	tokenHash := sha256.Sum256([]byte(tokenplaintext))
 
@@ -32,9 +32,6 @@ func (p *userpg) GetFromToken(tokenScope, tokenplaintext string) (*data.User, er
 		AND t.scope = $2
 		AND t.expiry > $3
 	`
-
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
 
 	args := []interface{}{tokenHash[:], tokenScope, time.Now()}
 
@@ -60,16 +57,14 @@ func (p *userpg) GetFromToken(tokenScope, tokenplaintext string) (*data.User, er
 	return &user, nil
 }
 
-func (p *userpg) Insert(user *data.User) error {
+func (p *userpg) Insert(ctx context.Context, user *data.User) error {
 	query := `
 		INSERT INTO users (name, email, password_hash, activated) 
 		VALUES ($1, $2, $3, $4)
 		RETURNING id, created_at, version`
 
 	args := []interface{}{user.Name, user.Email, user.Password.Hash, user.Activated}
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 
-	defer cancel()
 	// If the table already contains a record with this email address, then when we try
 	// to perform the insert there will be a violation of the UNIQUE "users_email_key"
 	// constraint that we set up in the previous chapter. We check for this error
@@ -86,14 +81,12 @@ func (p *userpg) Insert(user *data.User) error {
 	return nil
 }
 
-func (p *userpg) GetByEmail(email string) (*data.User, error) {
+func (p *userpg) GetByEmail(ctx context.Context, email string) (*data.User, error) {
 	query := `
 		SELECT id, created_at, name, email, password_hash, activated, version FROM users
 		WHERE email = $1`
 
 	var user data.User
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
 
 	err := p.db.QueryRowContext(ctx, query, email).Scan(&user.ID,
 		&user.CreatedAt, &user.Name, &user.Email, &user.Password.Hash, &user.Activated, &user.Version,
@@ -110,7 +103,7 @@ func (p *userpg) GetByEmail(email string) (*data.User, error) {
 	return &user, nil
 }
 
-func (p *userpg) Update(user *data.User) error {
+func (p *userpg) Update(ctx context.Context, user *data.User) error {
 	query := ` 
 		UPDATE users
 		SET name = $1, email = $2, password_hash = $3, activated = $4, version = version + 1 
@@ -120,9 +113,6 @@ func (p *userpg) Update(user *data.User) error {
 	args := []interface{}{user.Name,
 		user.Email, user.Password.Hash, user.Activated, user.ID, user.Version,
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
 
 	err := p.db.QueryRowContext(ctx, query, args...).Scan(&user.Version)
 	if err != nil {

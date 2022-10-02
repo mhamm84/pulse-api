@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/common-nighthawk/go-figure"
 	"github.com/mhamm84/pulse-api/internal/utils"
@@ -36,13 +37,12 @@ func init() {
 func main() {
 	// Setup logging
 	// logger := jsonlog.New(os.Stdout, jsonlog.GetLevel("DEBUG"))
-	utils.InitializeLogger()
 
 	// Fancy ascii splash when starting the app
 	myFigure := figure.NewColorFigure("Pulse API Admin CLI", "", "green", true)
 	myFigure.Print()
 
-	utils.Logger.Info("Hi! Welcome!")
+	utils.Logger(context.TODO()).Info("Hi! Welcome!")
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

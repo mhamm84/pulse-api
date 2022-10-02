@@ -61,7 +61,7 @@ func createDashSummary(ctx context.Context, economyRepo data.EconomicRepository,
 	latestWithChange, err := economyRepo.LatestWithPercentChange(ctx, tableName)
 	if err != nil {
 		msg := "error getting LatestWithPercentChange data for dashboard summary"
-		utils.Logger.Error(msg, zap.Error(err),
+		utils.Logger(ctx).Error(msg, zap.Error(err),
 			zap.String("dataType", tableName),
 			zap.String("dashHeader", dashHeader),
 			zap.Error(err),

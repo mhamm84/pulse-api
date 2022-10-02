@@ -8,7 +8,7 @@ import (
 )
 
 func (app *application) logError(r *http.Request, err error) {
-	utils.Logger.Error("application error",
+	utils.Logger(r.Context()).Error("application error",
 		zap.Error(err),
 		zap.Any("request", &r),
 	)

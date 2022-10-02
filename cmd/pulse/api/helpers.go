@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -113,7 +114,7 @@ func (app *application) background(fn func()) {
 
 		defer func() {
 			if err := recover(); err != nil {
-				utils.Logger.Error("error in background thread",
+				utils.Logger(context.TODO()).Error("error in background thread",
 					zap.Error(fmt.Errorf("%s", err)),
 				)
 			}

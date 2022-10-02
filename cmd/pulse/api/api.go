@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"github.com/common-nighthawk/go-figure"
 	"github.com/mhamm84/gofinance-alpha/alpha"
 	"github.com/mhamm84/pulse-api/cmd/config"
@@ -46,48 +47,49 @@ func StartApi(cfg *config.ApiConfig) {
 		mailer:   mailer,
 	}
 
+	ctx := context.TODO()
 	// Start the data sync tasks to keep data from the API up to date in the DB
 	if cfg.DataSync {
-		utils.Logger.Info("Starting startEconomicReportDataSync")
+		utils.Logger(ctx).Info("Starting startEconomicReportDataSync")
 		app.startEconomicReportDataSync()
 	}
 
-	logConfig(cfg)
+	logConfig(ctx, cfg)
 
 	// Serve the API
 	err = app.serve()
 	if err != nil {
-		utils.Logger.Fatal("fatal error while serving the api", zap.Error(err))
+		utils.Logger(ctx).Fatal("fatal error while serving the api", zap.Error(err))
 	}
 }
 
-func logConfig(cfg *config.ApiConfig) {
-	utils.Logger.Info("API",
+func logConfig(ctx context.Context, cfg *config.ApiConfig) {
+	utils.Logger(ctx).Info("API",
 		zap.String("host", cfg.Host),
 		zap.Int("port", cfg.Port),
 		zap.String("env", cfg.Env),
 		zap.Strings("cors", cfg.Cors.TrustedOrigins),
 		zap.String("logLevel", cfg.LogLevel),
 	)
-	utils.Logger.Info("SMTP Server Config",
+	utils.Logger(ctx).Info("SMTP Server Config",
 		zap.String("host", cfg.SMTP.Host),
 		zap.Int("port", cfg.SMTP.Port),
 		zap.String("username", cfg.SMTP.Username),
 		zap.String("password", cfg.SMTP.Password),
 		zap.String("sender", cfg.SMTP.Sender),
 	)
-	utils.Logger.Info("Rate Limiter",
+	utils.Logger(ctx).Info("Rate Limiter",
 		zap.Bool("enabled", cfg.Limiter.Enabled),
 		zap.Float64("rps", cfg.Limiter.RPS),
 		zap.Int("username", cfg.Limiter.Burst),
 	)
-	utils.Logger.Info("DB",
+	utils.Logger(ctx).Info("DB",
 		zap.String("dsn", cfg.DB.Dsn),
 		zap.Int("port", cfg.DB.MaxOpenConns),
 		zap.Int("env", cfg.DB.MaxIdleConns),
 		zap.String("cors", cfg.DB.MaxIdleTime),
 	)
-	utils.Logger.Info("AlphaVantage Config",
+	utils.Logger(ctx).Info("AlphaVantage Config",
 		zap.String("baseUrl", cfg.AlphaVantage.BaseUrl),
 		zap.String("token", cfg.AlphaVantage.Token),
 	)

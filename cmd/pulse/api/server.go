@@ -29,7 +29,8 @@ func (app *application) serve() error {
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 		s := <-quit
 
-		utils.Logger.Info("signal caught",
+		ctx := context.TODO()
+		utils.Logger(ctx).Info("signal caught",
 			zap.String("signal", s.String()),
 		)
 
@@ -40,7 +41,7 @@ func (app *application) serve() error {
 		if err != nil {
 			shutdownError <- err
 		}
-		utils.Logger.Info("completing background tasks...",
+		utils.Logger(ctx).Info("completing background tasks...",
 			zap.String("addr", srv.Addr),
 		)
 		app.wg.Wait()
@@ -57,7 +58,7 @@ func (app *application) serve() error {
 		return err
 	}
 
-	utils.Logger.Info("stopped Pulse server",
+	utils.Logger(context.TODO()).Info("stopped Pulse server",
 		zap.String("addr", srv.Addr),
 		zap.String("env", app.cfg.Env),
 	)

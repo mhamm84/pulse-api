@@ -26,7 +26,7 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	user, err := app.services.UserService.ActivateUser(input.Token)
+	user, err := app.services.UserService.ActivateUser(r.Context(), input.Token)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -77,7 +77,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = app.services.UserService.RegisterUser(user)
+	err = app.services.UserService.RegisterUser(r.Context(), user)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrDuplicateEmail):

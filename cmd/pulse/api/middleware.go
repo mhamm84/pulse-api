@@ -23,10 +23,10 @@ func (app *application) addRequestId(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		reqId := uuid.New()
-		rqCtx := WithReqId(r.Context(), reqId.String())
+		rqCtx := utils.WithReqId(r.Context(), reqId.String())
 		r = r.WithContext(rqCtx)
 
-		Logger(rqCtx).Debug("Incoming request",
+		utils.Logger(rqCtx).Debug("Incoming request",
 			zap.Any("requestURI", r.RequestURI),
 			zap.Any("remoteAddress", r.RemoteAddr),
 			zap.Any("method", r.Method),
@@ -39,15 +39,15 @@ func (app *application) addRequestId(next http.Handler) http.Handler {
 func (app *application) requirePermissions(code string, next http.HandlerFunc) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		user := app.contextGetUser(r)
-		utils.Logger.Info("requirePermissions",
+		utils.Logger(r.Context()).Info("requirePermissions",
 			zap.String("code", code),
 		)
-		permissions, err := app.services.PermissionsService.GetAllForUser(user.ID)
+		permissions, err := app.services.PermissionsService.GetAllForUser(r.Context(), user.ID)
 		if err != nil {
 			app.serverErrorResponse(w, r, err)
 			return
 		}
-		utils.Logger.Info("requirePermissions",
+		utils.Logger(r.Context()).Info("requirePermissions",
 			zap.String("user.ID", code),
 			zap.Any("permissions", permissions),
 		)
@@ -116,7 +116,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		user, err := app.services.UserService.GetFromToken(data.ScopeAuthentication, token)
+		user, err := app.services.UserService.GetFromToken(r.Context(), data.ScopeAuthentication, token)
 		if err != nil {
 			switch {
 			case errors.Is(err, data.ErrRecordNotFound):
