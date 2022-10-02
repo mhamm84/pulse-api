@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/mhamm84/pulse-api/internal/data"
 	"github.com/mhamm84/pulse-api/internal/services"
 	"github.com/mhamm84/pulse-api/internal/utils"
@@ -17,6 +18,23 @@ import (
 )
 
 const AuthorizationHeader = "Authorization"
+
+func (app *application) addRequestId(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		reqId := uuid.New()
+		rqCtx := WithReqId(r.Context(), reqId.String())
+		r = r.WithContext(rqCtx)
+
+		Logger(rqCtx).Debug("Incoming request",
+			zap.Any("requestURI", r.RequestURI),
+			zap.Any("remoteAddress", r.RemoteAddr),
+			zap.Any("method", r.Method),
+		)
+
+		next.ServeHTTP(w, r)
+	})
+}
 
 func (app *application) requirePermissions(code string, next http.HandlerFunc) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, r *http.Request) {

@@ -62,7 +62,7 @@ func (app application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPost, WithVersion("/%s/tokens/activation"), app.createActivationTokenHandler)
 	router.HandlerFunc(http.MethodPost, WithVersion("/%s/tokens/authentication"), app.createAuthenticationTokenHandler)
 
-	return app.recoverPanic(app.enableCORS(app.rateLimit(app.authenticate(router))))
+	return app.recoverPanic(app.enableCORS(app.addRequestId(app.rateLimit(app.authenticate(router)))))
 }
 
 func WithVersion(pathFmt string) string {

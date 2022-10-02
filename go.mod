@@ -22,6 +22,8 @@ require (
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858
 )
 
+require github.com/google/uuid v1.3.0
+
 require (
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
