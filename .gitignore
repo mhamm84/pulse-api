@@ -49,3 +49,4 @@
 /vendor/
 /pulse
 /docker/bin/
+/pulse.log
